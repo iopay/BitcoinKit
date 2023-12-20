@@ -16,14 +16,14 @@ Pod::Spec.new do |spec|
   spec.private_header_files = 'BitcoinKit/**/BitcoinKitPrivate.h'
   spec.exclude_files = 'Sources/**/LinuxSupport.swift'
   spec.module_map = 'BitcoinKit/BitcoinKit.modulemap'
-  spec.ios.deployment_target = '8.0'
-  spec.swift_version = '5.0'
+  spec.swift_version = '5.9'
+  spec.dependency 'secp256k1.swift', '~> 0.1'
 
   spec.pod_target_xcconfig = { 'SWIFT_WHOLE_MODULE_OPTIMIZATION' => 'YES',
                                'APPLICATION_EXTENSION_API_ONLY' => 'YES',
                                'SWIFT_INCLUDE_PATHS' => '${PODS_ROOT}/BitcoinKit/Libraries',
-                               'HEADER_SEARCH_PATHS' => '"${PODS_ROOT}/BitcoinKit/Libraries/openssl/include" "${PODS_ROOT}/BitcoinKit/Libraries/secp256k1/include"',
-                               'LIBRARY_SEARCH_PATHS' => '"${PODS_ROOT}/BitcoinKit/Libraries/openssl/lib" "${PODS_ROOT}/BitcoinKit/Libraries/secp256k1/lib"',
+                               'HEADER_SEARCH_PATHS' => '${PODS_ROOT}/BitcoinKit/Libraries/openssl/include',
+                               'LIBRARY_SEARCH_PATHS' => '${PODS_ROOT}/BitcoinKit/Libraries/openssl/lib',
                                'OTHER_SWIFT_FLAGS' => '-D BitcoinKitXcode' }
   spec.preserve_paths = ['setup', 'Libraries']
   spec.prepare_command = 'sh setup/build_libraries.sh'
