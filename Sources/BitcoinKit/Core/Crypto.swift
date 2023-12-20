@@ -24,51 +24,42 @@
 //
 
 import Foundation
-#if BitcoinKitXcode
-import BitcoinKit.Private
-#else
-import BitcoinKitPrivate
-#endif
+import CryptoSwift
+import ripemd160
 
 public struct Crypto {
     public static func sha1(_ data: Data) -> Data {
-        return _Hash.sha1(data)
+        data.sha1()
     }
 
     public static func sha256(_ data: Data) -> Data {
-        return _Hash.sha256(data)
+        data.sha256()
     }
 
     public static func sha256sha256(_ data: Data) -> Data {
-        return sha256(sha256(data))
+        data.sha256().sha256()
     }
 
     public static func ripemd160(_ data: Data) -> Data {
-        return _Hash.ripemd160(data)
+        Data(Ripemd160.digest(data.bytes))
     }
 
     public static func sha256ripemd160(_ data: Data) -> Data {
-        return ripemd160(sha256(data))
+        ripemd160(sha256(data))
     }
 
-    public static func hmacsha512(data: Data, key: Data) -> Data {
-        return _Hash.hmacsha512(data, key: key)
+    public static func hmacsha512(data: Data, key: Data) -> Data? {
+        let hmac = HMAC(key: key.bytes, variant: .sha2(.sha512))
+        guard let entropy = try? hmac.authenticate(data.bytes), entropy.count == 64 else { return nil }
+        return Data(entropy)
     }
 
     public static func sign(_ data: Data, privateKey: PrivateKey) throws -> Data {
-        #if BitcoinKitXcode
-        return _Crypto.signMessage(data, withPrivateKey: privateKey.data)
-        #else
         return try _Crypto.signMessage(data, withPrivateKey: privateKey.data)
-        #endif
     }
 
     public static func verifySignature(_ signature: Data, message: Data, publicKey: Data) throws -> Bool {
-        #if BitcoinKitXcode
-        return _Crypto.verifySignature(signature, message: message, publicKey: publicKey)
-        #else
         return try _Crypto.verifySignature(signature, message: message, publicKey: publicKey)
-        #endif
     }
 
     public static func verifySigData(for tx: Transaction, inputIndex: Int, utxo: TransactionOutput, sigData: Data, pubKeyData: Data) throws -> Bool {

@@ -32,8 +32,8 @@ struct UnspentOutput: Codable {
 
 extension UnspentOutput {
     func asUnspentTransaction() -> UnspentTransaction {
-        let transactionOutput = TransactionOutput(value: satoshis, lockingScript: Data(hex: scriptPubKey)!)
-        let txid: Data = Data(hex: String(txID))!
+        let transactionOutput = TransactionOutput(value: satoshis, lockingScript: Data(hex: scriptPubKey))
+        let txid: Data = Data(hex: String(txID))
         let txHash: Data = Data(txid.reversed())
         let transactionOutpoint = TransactionOutPoint(hash: txHash, index: vout)
         return UnspentTransaction(output: transactionOutput, outpoint: transactionOutpoint)

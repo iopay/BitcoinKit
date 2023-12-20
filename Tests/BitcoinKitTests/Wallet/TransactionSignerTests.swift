@@ -33,11 +33,11 @@ class TransactionSignerTests: XCTestCase {
         
         // TransactionOutput
         let prevTxLockScript = Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac")
-        let prevTxOutput = TransactionOutput(value: 5151, lockingScript: prevTxLockScript!)
+        let prevTxOutput = TransactionOutput(value: 5151, lockingScript: prevTxLockScript)
         
         // TransactionOutpoint
         let prevTxID = "050d00e2e18ef13969606f1ceee290d3f49bd940684ce39898159352952b8ce2"
-        let prevTxHash = Data(Data(hex: prevTxID)!.reversed())
+        let prevTxHash = Data(Data(hex: prevTxID).reversed())
         let prevTxOutPoint = TransactionOutPoint(hash: prevTxHash, index: 2)
         
         // UnspentTransaction
@@ -51,7 +51,7 @@ class TransactionSignerTests: XCTestCase {
         let privKey = try! PrivateKey(wif: "L1WFAgk5LxC5NLfuTeADvJ5nm3ooV3cKei5Yi9LJ8ENDfGMBZjdW")
         let signer = TransactionSigner(unspentTransactions: plan.unspentTransactions, transaction: tx, sighashHelper: BCHSignatureHashHelper(hashType: .ALL))
         let signedTx = try! signer.sign(with: [privKey])
-        let expected: Data = Data(hex: "0100000001e28c2b955293159898e34c6840d99bf4d390e2ee1c6f606939f18ee1e2000d05020000006b483045022100b70d158b43cbcded60e6977e93f9a84966bc0cec6f2dfd1463d1223a90563f0d02207548d081069de570a494d0967ba388ff02641d91cadb060587ead95a98d4e3534121038eab72ec78e639d02758e7860cdec018b49498c307791f785aa3019622f4ea5bffffffff0258020000000000001976a914769bdff96a02f9135a1d19b749db6a78fe07dc9088ace5100000000000001976a9149e089b6889e032d46e3b915a3392edfd616fb1c488ac00000000")!
+        let expected: Data = Data(hex: "0100000001e28c2b955293159898e34c6840d99bf4d390e2ee1c6f606939f18ee1e2000d05020000006b483045022100b70d158b43cbcded60e6977e93f9a84966bc0cec6f2dfd1463d1223a90563f0d02207548d081069de570a494d0967ba388ff02641d91cadb060587ead95a98d4e3534121038eab72ec78e639d02758e7860cdec018b49498c307791f785aa3019622f4ea5bffffffff0258020000000000001976a914769bdff96a02f9135a1d19b749db6a78fe07dc9088ace5100000000000001976a9149e089b6889e032d46e3b915a3392edfd616fb1c488ac00000000")
         XCTAssertEqual(signedTx.serialized(), expected)
         XCTAssertEqual(signedTx.txID, "96ee20002b34e468f9d3c5ee54f6a8ddaa61c118889c4f35395c2cd93ba5bbb4")
     }

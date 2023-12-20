@@ -32,7 +32,7 @@ class ScriptMachineTests: XCTestCase {
         // https://api.blockcypher.com/v1/btc/test3/txs/0189910c263c4d416d5c5c2cf70744f9f6bcd5feaf0b149b02e5d88afbe78992
         let prevTxID = "1524ca4eeb9066b4765effd472bc9e869240c4ecb5c1ee0edb40f8b666088231"
         // hash.reversed = txid
-        let hash = Data(Data(hex: prevTxID)!.reversed())
+        let hash = Data(Data(hex: prevTxID).reversed())
         let index: UInt32 = 1
         let outpoint = TransactionOutPoint(hash: hash, index: index)
         
@@ -53,7 +53,7 @@ class ScriptMachineTests: XCTestCase {
 
         let sending = TransactionOutput(value: amount, lockingScript: lockingScript1)
         let payback = TransactionOutput(value: balance - amount - fee, lockingScript: lockingScript2)
-        let subScript = Data(hex: "76a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac")!
+        let subScript = Data(hex: "76a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac")
         let inputForSign = TransactionInput(previousOutput: outpoint, signatureScript: subScript, sequence: UInt32.max)
         let unsignedTx = Transaction(version: 1, inputs: [inputForSign], outputs: [sending, payback], lockTime: 0)
         

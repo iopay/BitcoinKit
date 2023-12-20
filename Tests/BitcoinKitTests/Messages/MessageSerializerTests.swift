@@ -38,13 +38,13 @@ class MessageSerializerTests: XCTestCase {
             "fe9f0864" +    // Nonce
             "00")   // Transaction count (0x00)
         
-        let header = BlockMessage.deserialize(data!)
+        let header = BlockMessage.deserialize(data)
         XCTAssertEqual(header.version, 2)
         XCTAssertEqual(header.prevBlock.hex, "b6ff0b1b1680a2862a30ca44d346d9e8910d334beb48ca0c0000000000000000")
         XCTAssertEqual(header.merkleRoot.hex, "9d10aa52ee949386ca9385695f04ede270dda20810decd12bc9b048aaab31471")
         XCTAssertEqual(header.timestamp, 1415239972)
-        XCTAssertEqual(header.bits, Data(hex: "30c31b18")!.to(type: UInt32.self))
-        XCTAssertEqual(header.nonce, Data(hex: "fe9f0864")!.to(type: UInt32.self))
+        XCTAssertEqual(header.bits, Data(hex: "30c31b18").to(type: UInt32.self))
+        XCTAssertEqual(header.nonce, Data(hex: "fe9f0864").to(type: UInt32.self))
         XCTAssertEqual(header.transactionCount.underlyingValue, 0)
         XCTAssertTrue(header.transactions.isEmpty)
     }
@@ -59,7 +59,7 @@ class MessageSerializerTests: XCTestCase {
             "61bc6649" +
             "ffff001d" +
             "01e36299" +
-            "00")!
+            "00")
         let headersMessage = try! HeadersMessage.deserialize(data)
         XCTAssertEqual(headersMessage.count.underlyingValue, 1)
         let header = headersMessage.headers[0]
@@ -82,7 +82,7 @@ class MessageSerializerTests: XCTestCase {
             "a88d221c8bd6c059da090e88f8a2c99690ee55dbba4e00000000e11c48fecdd9e72510ca84f023" +
             "370c9a38bf91ac5cae88019bee94d24528526344c36649ffff001d1d03e4770001000000fc33f5" +
             "96f822a0a1951ffdbf2a897b095636ad871707bf5d3162729b00000000379dfb96a5ea8c81700ea4" +
-            "ac6b97ae9a9312b2d4301a29580e924ee6761a2520adc46649ffff001d189c4c9700")!
+            "ac6b97ae9a9312b2d4301a29580e924ee6761a2520adc46649ffff001d189c4c9700")
         let headersMessage = try! HeadersMessage.deserialize(data)
         XCTAssertEqual(headersMessage.count.underlyingValue, 6)
         

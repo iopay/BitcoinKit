@@ -33,7 +33,7 @@ class BTCSignatureHashHelperTests: XCTestCase {
         // Transaction in testnet3
         // https://api.blockcypher.com/v1/btc/test3/txs/0189910c263c4d416d5c5c2cf70744f9f6bcd5feaf0b149b02e5d88afbe78992
         let prevTxID = "1524ca4eeb9066b4765effd472bc9e869240c4ecb5c1ee0edb40f8b666088231"
-        let hash = Data(Data(hex: prevTxID)!.reversed())
+        let hash = Data(Data(hex: prevTxID).reversed())
         let index: UInt32 = 1
         let outpoint = TransactionOutPoint(hash: hash, index: index)
         

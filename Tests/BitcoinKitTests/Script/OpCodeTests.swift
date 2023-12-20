@@ -578,7 +578,7 @@ class OpCodeTests: XCTestCase {
         // BTC Transaction in testnet3
         // https://api.blockcypher.com/v1/btc/test3/txs/0189910c263c4d416d5c5c2cf70744f9f6bcd5feaf0b149b02e5d88afbe78992
         let prevTxID = "1524ca4eeb9066b4765effd472bc9e869240c4ecb5c1ee0edb40f8b666088231"
-        let hash = Data(Data(hex: prevTxID)!.reversed())
+        let hash = Data(Data(hex: prevTxID).reversed())
         let index: UInt32 = 1
         let outpoint = TransactionOutPoint(hash: hash, index: index)
 
@@ -588,7 +588,7 @@ class OpCodeTests: XCTestCase {
 
         let fromPublicKey = privateKey.publicKey()
 
-        let subScript = Data(hex: "76a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac")!
+        let subScript = Data(hex: "76a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac")
         let inputForSign = TransactionInput(previousOutput: outpoint, signatureScript: subScript, sequence: UInt32.max)
         let unsignedTx = Transaction(version: 1, inputs: [inputForSign], outputs: [], lockTime: 0)
 
@@ -665,7 +665,7 @@ class OpCodeTests: XCTestCase {
         // BCH Transaction
         // https://blockchair.com/bitcoin-cash/transaction/a793605eaed2c08c3f4c7906dd1526238ea04e9a16c785d46988c8cbd56f5088
         let prevTxID = "3b3ffd3f597cc114c14b3655f61da60258e2ff69388cd2e463c60504a0d98f78"
-        let hash = Data(Data(hex: prevTxID)!.reversed())
+        let hash = Data(Data(hex: prevTxID).reversed())
         let index: UInt32 = 1
         let outpoint = TransactionOutPoint(hash: hash, index: index)
 
@@ -675,7 +675,7 @@ class OpCodeTests: XCTestCase {
 
         let fromPublicKey = privateKey.publicKey()
 
-        let subScript = Data(hex: "30440220356c7a8d55d4a63b1eab9cf00886cb66fe114d31f59faf242295e0e6e2aec9e5022052b6c4ee09b6564edf5a6d13f386e43ca6f9b4af19e9fefea413ac28d5b8d2df41036b7b02cc5592256d22e45c2c70c41b34e962cc370bcf672cea6f476e1db318c8")!
+        let subScript = Data(hex: "30440220356c7a8d55d4a63b1eab9cf00886cb66fe114d31f59faf242295e0e6e2aec9e5022052b6c4ee09b6564edf5a6d13f386e43ca6f9b4af19e9fefea413ac28d5b8d2df41036b7b02cc5592256d22e45c2c70c41b34e962cc370bcf672cea6f476e1db318c8")
         let inputForSign = TransactionInput(previousOutput: outpoint, signatureScript: subScript, sequence: UInt32.max)
         let unsignedTx = Transaction(version: 1, inputs: [inputForSign], outputs: [], lockTime: 0)
 

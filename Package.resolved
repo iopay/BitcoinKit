@@ -2,12 +2,21 @@
   "object": {
     "pins": [
       {
-        "package": "COpenSSL",
-        "repositoryURL": "https://github.com/vapor-community/copenssl.git",
+        "package": "CryptoSwift",
+        "repositoryURL": "https://github.com/krzyzanowskim/CryptoSwift.git",
         "state": {
           "branch": null,
-          "revision": "a347e9ec038b134aecf42e0c21f2deb9035adf3f",
-          "version": "1.0.0-rc.1"
+          "revision": "db51c407d3be4a051484a141bf0bff36c43d3b1e",
+          "version": "1.8.0"
+        }
+      },
+      {
+        "package": "ripemd160",
+        "repositoryURL": "https://github.com/zhangliugang/ripemd160",
+        "state": {
+          "branch": "master",
+          "revision": "215d9675af3f8151e7ae43076afbcb765dd12601",
+          "version": null
         }
       },
       {

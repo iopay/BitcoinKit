@@ -34,7 +34,7 @@ class Base58Tests: XCTestCase {
 
     func testBase58_2() {
         do {
-            let original = Data(hex: "00010966776006953D5567439E5E39F86A0D273BEED61967F6")!
+            let original = Data(hex: "00010966776006953D5567439E5E39F86A0D273BEED61967F6")
 
             let encoded = Base58.encode(original)
             XCTAssertEqual(encoded, "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM")
@@ -67,7 +67,7 @@ class Base58Tests: XCTestCase {
     
     func HexEncodesToBase58(hex: String, base58: String) {
         //Encode
-        let data = Data(hex: hex)!
+        let data = Data(hex: hex)
         XCTAssertEqual(Base58.encode(data), base58)
         //Decode
         XCTAssertEqual(Base58.decode(base58)!.hex, hex)

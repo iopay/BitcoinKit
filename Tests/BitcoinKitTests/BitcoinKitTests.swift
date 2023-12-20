@@ -29,15 +29,15 @@ import XCTest
 class BitcoinKitTests: XCTestCase {
     func testConvertIP() {
         let ipv6Address = "2001:0db8:1234:5678:90ab:cdef:0000:0000"
-        XCTAssertEqual(ipv6(from: Data(hex: ipv6Address.split(separator: ":").joined())!), ipv6Address)
+        XCTAssertEqual(ipv6(from: Data(hex: ipv6Address.split(separator: ":").joined())), ipv6Address)
 
         let ipv4mappedIPv6_1 = "0000:0000:0000:0000:0000:ffff:7f00:0001"
-        XCTAssertEqual(ipv6(from: Data(hex: ipv4mappedIPv6_1.split(separator: ":").joined())!), ipv4mappedIPv6_1)
-        XCTAssertEqual(ipv4(from: Data(hex: ipv4mappedIPv6_1.split(separator: ":").joined())!), "127.0.0.1")
+        XCTAssertEqual(ipv6(from: Data(hex: ipv4mappedIPv6_1.split(separator: ":").joined())), ipv4mappedIPv6_1)
+        XCTAssertEqual(ipv4(from: Data(hex: ipv4mappedIPv6_1.split(separator: ":").joined())), "127.0.0.1")
 
         let ipv4mappedIPv6_2 = "0000:0000:0000:0000:0000:ffff:a00d:d2cc"
-        XCTAssertEqual(ipv6(from: Data(hex: ipv4mappedIPv6_2.split(separator: ":").joined())!), ipv4mappedIPv6_2)
-        XCTAssertEqual(ipv4(from: Data(hex: ipv4mappedIPv6_2.split(separator: ":").joined())!), "160.13.210.204")
+        XCTAssertEqual(ipv6(from: Data(hex: ipv4mappedIPv6_2.split(separator: ":").joined())), ipv4mappedIPv6_2)
+        XCTAssertEqual(ipv4(from: Data(hex: ipv4mappedIPv6_2.split(separator: ":").joined())), "160.13.210.204")
 
         let ipv4mappedIPv6Data_1 = pton("::ffff:127.0.0.1")
         XCTAssertEqual(ipv6(from: ipv4mappedIPv6Data_1), "0000:0000:0000:0000:0000:ffff:7f00:0001")

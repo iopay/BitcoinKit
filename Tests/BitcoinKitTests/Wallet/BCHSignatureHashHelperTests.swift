@@ -35,12 +35,12 @@ class BCHSignatureHashHelperTests: XCTestCase {
         // https://explorer.bitcoin.com/bch/tx/96ee20002b34e468f9d3c5ee54f6a8ddaa61c118889c4f35395c2cd93ba5bbb4
         
         // TransactionOutput
-        let prevTxLockScript = Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac")!
+        let prevTxLockScript = Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac")
         let prevTxOutput = TransactionOutput(value: 5151, lockingScript: prevTxLockScript)
         
         // TransactionOutpoint
         let prevTxID = "050d00e2e18ef13969606f1ceee290d3f49bd940684ce39898159352952b8ce2"
-        let prevTxHash = Data(Data(hex: prevTxID)!.reversed())
+        let prevTxHash = Data(Data(hex: prevTxID).reversed())
         let prevTxOutPoint = TransactionOutPoint(hash: prevTxHash, index: 2)
         
         // UnspentTransaction

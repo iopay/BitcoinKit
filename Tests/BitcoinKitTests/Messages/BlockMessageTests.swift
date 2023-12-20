@@ -28,10 +28,6 @@ import XCTest
 class BlockMessageTests: XCTestCase {
     fileprivate func loadRawBlock(named name: String) throws -> BlockMessage {
         let data: Data
-        #if BitcoinKitXcode
-        let url = Bundle(for: type(of: self)).url(forResource: name, withExtension: "raw")!
-        data = try Data(contentsOf: url)
-        #else
         // find raw files if using Swift Package Manager:
         let currentDirectoryURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let fileURL = currentDirectoryURL
@@ -39,7 +35,6 @@ class BlockMessageTests: XCTestCase {
             .appendingPathComponent(name)
             .appendingPathExtension("raw")
         data = try Data(contentsOf: fileURL)
-        #endif
 
         return BlockMessage.deserialize(data)
     }

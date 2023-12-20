@@ -52,7 +52,7 @@ class HDPrivateKeyTests: XCTestCase {
          */
 
         // Master: 000102030405060708090a0b0c0d0e0f
-        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")!
+        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")
 
         // m
         let privateKey = HDPrivateKey(seed: seed, network: .mainnetBCH)
@@ -110,7 +110,7 @@ class HDPrivateKeyTests: XCTestCase {
          */
 
         // Master: fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542
-        let seed = Data(hex: "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")!
+        let seed = Data(hex: "fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
 
         // m
         let privateKey = HDPrivateKey(seed: seed, network: .mainnetBCH)
@@ -148,7 +148,7 @@ class HDPrivateKeyTests: XCTestCase {
         // These vectors test for the retention of leading zeros. See bitpay/bitcore-lib#47 and iancoleman/bip39#58 for more information.
 
         // Master: 4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be
-        let seed = Data(hex: "4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be")!
+        let seed = Data(hex: "4b381541583be4423346c643850da4b320e46a87ae3d2a4e6da11eba819cd4acba45d239319ac14f863b8d5ab5a0d0c64d2e8a1e7d1457df2e5a3c51c73235be")
 
         // m
         let privateKey = HDPrivateKey(seed: seed, network: .mainnetBCH)
@@ -163,7 +163,7 @@ class HDPrivateKeyTests: XCTestCase {
 
     func testHDKey4() {
         // Master: 000102030405060708090a0b0c0d0e0f
-        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")!
+        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")
 
         // m
         let privateKey = HDPrivateKey(seed: seed, network: .mainnetBCH)
@@ -177,7 +177,7 @@ class HDPrivateKeyTests: XCTestCase {
     
     // https://github.com/yenom/BitcoinKit/issues/73
     func testDeriveProblem() {
-        let seed = Data(hex: "f27fd395d30d00f1c11b7551a93961ca41c0a78bce21e9a618e83a99cf74aec159139ef3ef078bc0038557b7cb689933d0806ce33571df78bc4397e7f9976ff2")!
+        let seed = Data(hex: "f27fd395d30d00f1c11b7551a93961ca41c0a78bce21e9a618e83a99cf74aec159139ef3ef078bc0038557b7cb689933d0806ce33571df78bc4397e7f9976ff2")
         
         let key = try! HDPrivateKey(seed: seed, network: .mainnetBCH)
             .derived(at: 44, hardened: true)

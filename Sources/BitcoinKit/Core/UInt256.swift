@@ -77,8 +77,8 @@ struct UInt256 {
 	init?(hex: String) {
 		let h = hex.replacingOccurrences(of: "_", with: "")
 		// big endian
-		guard let data = Data(hex: h)?.reversed() else { return nil }
-		self.init(data: Data(data))
+//		guard let data = Data(hex: h).reversed() else { return nil }
+		self.init(data: Data(Data(hex: h).reversed()))
 	}
 
 	public init(_ val: UInt) {

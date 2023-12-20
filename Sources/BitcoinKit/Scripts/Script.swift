@@ -92,10 +92,7 @@ public class Script {
     }
 
     public convenience init?(hex: String) {
-        guard let scriptData = Data(hex: hex) else {
-            return nil
-        }
-        self.init(data: scriptData)
+        self.init(data: Data(hex: hex))
     }
 
     public convenience init?(address: Address) {

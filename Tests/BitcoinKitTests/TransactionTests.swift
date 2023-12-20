@@ -31,7 +31,7 @@ class TransactionTests: XCTestCase {
         // Transaction in testnet3
         // https://api.blockcypher.com/v1/btc/test3/txs/0189910c263c4d416d5c5c2cf70744f9f6bcd5feaf0b149b02e5d88afbe78992
         let prevTxID = "1524ca4eeb9066b4765effd472bc9e869240c4ecb5c1ee0edb40f8b666088231"
-        let hash = Data(Data(hex: prevTxID)!.reversed())
+        let hash = Data(Data(hex: prevTxID).reversed())
         let index: UInt32 = 1
         let outpoint = TransactionOutPoint(hash: hash, index: index)
 
@@ -67,8 +67,8 @@ class TransactionTests: XCTestCase {
         let toAddress: BitcoinAddress = try! BitcoinAddress(legacy: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")
         let changeAddress: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
 
-        let unspentOutput = TransactionOutput(value: 5151, lockingScript: Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac")!)
-        let unspentOutpoint = TransactionOutPoint(hash: Data(hex: "e28c2b955293159898e34c6840d99bf4d390e2ee1c6f606939f18ee1e2000d05")!, index: 2)
+        let unspentOutput = TransactionOutput(value: 5151, lockingScript: Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac"))
+        let unspentOutpoint = TransactionOutPoint(hash: Data(hex: "e28c2b955293159898e34c6840d99bf4d390e2ee1c6f606939f18ee1e2000d05"), index: 2)
         let unspentTransaction = UnspentTransaction(output: unspentOutput, outpoint: unspentOutpoint)
         let utxoKey = try! PrivateKey(wif: "L1WFAgk5LxC5NLfuTeADvJ5nm3ooV3cKei5Yi9LJ8ENDfGMBZjdW")
 
@@ -85,7 +85,7 @@ class TransactionTests: XCTestCase {
     }
 
     func testIsCoinbase() {
-        let data = Data(hex: "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff025151ffffffff010000000000000000015100000000")!
+        let data = Data(hex: "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff025151ffffffff010000000000000000015100000000")
         let tx = Transaction.deserialize(data)
         XCTAssert(tx.isCoinbase())
     }

@@ -29,7 +29,7 @@ import XCTest
 class HDKeyChainTests: XCTestCase {
     func testHDKeychain() {
         // Master: 000102030405060708090a0b0c0d0e0f
-        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")!
+        let seed = Data(hex: "000102030405060708090a0b0c0d0e0f")
 
         let keychain = HDKeychain(seed: seed, network: .mainnetBCH)
         let privateKey = try! keychain.derivedKey(path: "m")

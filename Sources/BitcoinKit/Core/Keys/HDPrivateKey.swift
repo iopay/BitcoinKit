@@ -24,11 +24,6 @@
 //
 
 import Foundation
-#if BitcoinKitXcode
-import BitcoinKit.Private
-#else
-import BitcoinKitPrivate
-#endif
 
 public class HDPrivateKey {
     public let network: Network
@@ -49,7 +44,7 @@ public class HDPrivateKey {
     }
 
     public convenience init(seed: Data, network: Network) {
-        let hmac = Crypto.hmacsha512(data: seed, key: "Bitcoin seed".data(using: .ascii)!)
+        let hmac = Crypto.hmacsha512(data: seed, key: "Bitcoin seed".data(using: .ascii)!)!
         let privateKey = hmac[0..<32]
         let chainCode = hmac[32..<64]
         self.init(privateKey: privateKey, chainCode: chainCode, network: network)

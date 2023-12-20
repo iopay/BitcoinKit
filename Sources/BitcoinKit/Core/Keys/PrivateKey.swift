@@ -24,11 +24,6 @@
 //
 
 import Foundation
-#if BitcoinKitXcode
-import BitcoinKit.Private
-#else
-import BitcoinKitPrivate
-#endif
 
 public struct PrivateKey {
     @available(*, deprecated, renamed: "data")
@@ -112,17 +107,17 @@ public struct PrivateKey {
         return _SwiftKey.computePublicKey(fromPrivateKey: data, compression: isPublicKeyCompressed)
     }
 
-    public func publicKeyPoint() throws -> PointOnCurve {
-        let xAndY: Data = _SwiftKey.computePublicKey(fromPrivateKey: data, compression: false)
-        let expectedLengthOfScalar = Scalar32Bytes.expectedByteCount
-        let expectedLengthOfKey = expectedLengthOfScalar * 2
-        guard xAndY.count == expectedLengthOfKey else {
-            fatalError("expected length of key is \(expectedLengthOfKey) bytes, but got: \(xAndY.count)")
-        }
-        let x = xAndY.prefix(expectedLengthOfScalar)
-        let y = xAndY.suffix(expectedLengthOfScalar)
-        return try PointOnCurve(x: x, y: y)
-    }
+//    public func publicKeyPoint() throws -> PointOnCurve {
+//        let xAndY: Data = _SwiftKey.computePublicKey(fromPrivateKey: data, compression: false)
+//        let expectedLengthOfScalar = Scalar32Bytes.expectedByteCount
+//        let expectedLengthOfKey = expectedLengthOfScalar * 2
+//        guard xAndY.count == expectedLengthOfKey else {
+//            fatalError("expected length of key is \(expectedLengthOfKey) bytes, but got: \(xAndY.count)")
+//        }
+//        let x = xAndY.prefix(expectedLengthOfScalar)
+//        let y = xAndY.suffix(expectedLengthOfScalar)
+//        return try PointOnCurve(x: x, y: y)
+//    }
 
     public func publicKey() -> PublicKey {
         return PublicKey(bytes: computePublicKeyData(), network: network)

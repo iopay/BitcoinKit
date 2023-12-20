@@ -23,14 +23,7 @@
 //
 
 import Foundation
-
-// MARK: - Public
-
-#if BitcoinKitXcode
-import BitcoinKit.Private
-#else
-import BitcoinKitPrivate
-#endif
+import CryptoSwift
 
 // MARK: Generate
 public extension Mnemonic {
@@ -75,13 +68,15 @@ public extension Mnemonic {
         mnemonic words: [String],
         passphrase: String = "",
         validateChecksum: (([String]) throws -> Void) = { try Mnemonic.validateChecksumDerivingLanguageOf(mnemonic: $0) }
-    ) rethrows -> Data {
+    ) rethrows -> Data! {
 
         try validateChecksum(words)
 
-        let mnemonic = words.joined(separator: " ").decomposedStringWithCompatibilityMapping.data(using: .utf8)!
-        let salt = ("mnemonic" + passphrase).decomposedStringWithCompatibilityMapping.data(using: .utf8)!
-        let seed = _Key.deriveKey(mnemonic, salt: salt, iterations: 2048, keyLength: 64)
-        return seed
+        let mnemData = words.joined(separator: " ").decomposedStringWithCompatibilityMapping.data(using: .utf8)!
+        let saltData = ("mnemonic" + passphrase).decomposedStringWithCompatibilityMapping.data(using: .utf8)!
+//        let seed = _Key.deriveKey(mnemonic, salt: salt, iterations: 2048, keyLength: 64)
+//        return seed
+        guard let seedArray = try? PKCS5.PBKDF2(password: mnemData.bytes, salt: saltData.bytes, iterations: 2048, keyLength: 64, variant: HMAC.Variant.sha2(.sha512)).calculate() else { return nil }
+        return Data(seedArray)
     }
 }
