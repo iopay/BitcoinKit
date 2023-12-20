@@ -82,4 +82,61 @@ class TransactionBuilderTests: XCTestCase {
 //        let expectedSignatureHash: Data = Data(hex: "1136d4975aee4ff6ccf0b8a9c640532f563b48d9856fdc9682c37a071702937c")!
 //        XCTAssertEqual(tx.signatureHash(for: prevTxOutput, inputIndex: 0, hashType: SighashType.BCH.ALL), expectedSignatureHash)
     }
+
+    func testBuildTransaction() throws {
+//        print(UInt32.max)
+        let pre_id = "a61a8e37eded6b5ad276d0909638cacafcc7e39de49b313f2b6a659802452ab6"
+        let preHash = Data(Data(hex: pre_id)!.reversed())
+
+
+        let privateKey = try PrivateKey(wif: "cMaiBc8cCbUcM4uyBCHfDabidYUR8EACuSm9rgRkxQPCsBma4sbX")
+        let from = privateKey.publicKey().toBitcoinAddress()
+        let to = try BitcoinAddress(legacy: "n2RJwAYq4km2RPXKRKKiCR4mJZ5f9harCD")
+        let balance: UInt64 = 4158265
+        let amount: UInt64  = 1000000
+        let fee: UInt64     = 1000 * 120
+
+        print(preHash.hex)
+        print(from.data.hex)
+        print(to.data.hex)
+
+        XCTAssertEqual("76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac", Script(address: from)!.data.hex)
+        XCTAssertEqual("76a914e5495ffe01a0598c25d2470d56742effe75237a788ac", Script(address: to)!.data.hex)
+
+        let outputPoint = TransactionOutPoint(hash: preHash, index: 8)
+        let utxo = UnspentTransaction(output: .init(value: balance, lockingScript: Data(hex: "76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac")!), outpoint: outputPoint)
+
+        let input = TransactionInput(previousOutput: outputPoint, signatureScript: Data(), sequence: UInt32.max)
+        let output1 = TransactionOutput(value: amount, lockingScript: Script(address: to)!.data)
+        let output2 = TransactionOutput(value: balance - amount - fee, lockingScript: Script(address: from)!.data)
+        let tx = Transaction(version: 1, inputs: [input], outputs: [output1, output2], lockTime: 0)
+//        let utxoToSign = TransactionOutput(value: balance, lockingScript: Script(address: from)!.data)
+
+//        print(UInt8(1).littleEndian)
+//        print(tx.serialized().hex)
+        XCTAssertEqual(tx.serialized().hex, "0100000001b62a450298656a2b3f319be49de3c7fccaca389690d076d25a6beded378e1aa60800000000ffffffff0240420f00000000001976a914e5495ffe01a0598c25d2470d56742effe75237a788ac395c2e00000000001976a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac00000000")
+
+        let helper = BTCSignatureHashHelper(hashType: .ALL)
+        let signer = TransactionSigner(unspentTransactions: [utxo], transaction: tx, sighashHelper: helper)
+        let signedTx = try signer.sign(with: [privateKey])
+
+//        let signed = privateKey.sign(signHash)
+        print("rawData:", signedTx.serialized().hex)
+
+//        print("signHash:", signHash.hex)
+//        print("signed:", signed.hex)
+//        print((signHash + signed).hex)
+    }
+}
+//8564a4885d46884ca418de014a2b25b3e2a8fe1b22c4dc365b1a3e7418b7acd53045022100e9f86f57864a6aabc6e3c6606f7acc3e5c5b6b47cec46330f9d0f5f73ef5264d02204518052a11b9ade5ce479b43fb62cf11bf995e42e23cb0ce8d172be88627e16a
+//3044022029ed977d19800147692b3ca015c90484db1758f56fc9d82b8f9340c808e5457502204f81feec5818c62ce5f01acd073ca04d26bbba4c028d8b63ec321e3084863d398564a4885d46884ca418de014a2b25b3e2a8fe1b22c4dc365b1a3e7418b7acd5
+func splitStringIntoChunks(of size: Int, from input: String) -> [String] {
+    var result = [String]()
+    let characters = Array(input)
+    for i in stride(from: 0, to: characters.count, by: size) {
+        let end = i + size < characters.count ? i + size : characters.count
+        let chunk = String(characters[i..<end])
+        result.append(chunk)
+    }
+    return result
 }

@@ -40,6 +40,9 @@ import Foundation
 /// , `Equatable`, `Hashable`, `CustomStringConvertible`
 
 public struct BitArray: Hashable, RangeReplaceableCollection {
+    public func replaceSubrange<C>(_ subrange: Range<Int>, with newElements: C) where C : Collection, Bool == C.Element {
+        
+    }
 
     // MARK: Creating a BitArray
 
