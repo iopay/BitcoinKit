@@ -132,24 +132,45 @@ public struct Bech32 {
         return PolyMod(expand(prefix) + payload) == 0
     }
 
-    internal static func expand(_ prefix: String) -> Data {
-        var ret: Data = Data()
-        let buf: [UInt8] = Array(prefix.utf8)
-        for b in buf {
-            ret += b & 0x1f
+    internal static func expand(_ hrp: String) -> Data {
+//        var ret: Data = Data()
+//        let buf: [UInt8] = Array(prefix.utf8)
+//        for b in buf {
+//            ret += b & 0x1f
+//        }
+//        ret += Data(repeating: 0, count: 1)
+//        return ret
+        guard let hrpBytes = hrp.data(using: .utf8) else { return Data() }
+        var result = Data(repeating: 0x00, count: hrpBytes.count*2+1)
+        for (i, c) in hrpBytes.enumerated() {
+            result[i] = c >> 5
+            result[i + hrpBytes.count + 1] = c & 0x1f
         }
-        ret += Data(repeating: 0, count: 1)
-        return ret
+        result[hrp.count] = 0
+        return result
     }
 
     internal static func createChecksum(prefix: String, payload: Data) -> Data {
-        let enc: Data = expand(prefix) + payload + Data(repeating: 0, count: 8)
-        let mod: UInt64 = PolyMod(enc)
+        let enc: Data = expand(prefix) + payload + Data(repeating: 0x00, count: 6)
+        let mod: UInt32 = polymod(enc) ^ 1
         var ret: Data = Data()
-        for i in 0..<8 {
-            ret += UInt8((mod >> (5 * (7 - i))) & 0x1f)
+        for i in 0..<6 {
+            ret += UInt8((mod >> (5 * (5 - i))) & 0x1f)
         }
         return ret
+    }
+
+    private static let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+    private static func polymod(_ values: Data) -> UInt32 {
+        var chk: UInt32 = 1
+        for v in values {
+            let top = (chk >> 25)
+            chk = (chk & 0x1ffffff) << 5 ^ UInt32(v)
+            for i: UInt8 in 0..<5 {
+                chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
+            }
+        }
+        return chk
     }
 
     internal static func PolyMod(_ data: Data) -> UInt64 {
