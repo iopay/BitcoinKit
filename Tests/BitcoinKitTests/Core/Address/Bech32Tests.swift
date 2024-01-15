@@ -115,5 +115,11 @@ class Bech32Tetst: XCTestCase {
 
         XCTAssertEqual(address.bech32, "tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg")
 
+        let (p, d) = Bech32.decode("tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg", separator: "1")!
+        XCTAssertEqual(p, "tb")
+        XCTAssertEqual(d.hex, hash.hex)
+
+        let addr2 = try BitcoinAddress(bech32: "tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg")
+        XCTAssertEqual(addr2.legacy, "msDtSbsvsGycRVZpcm6d5YA6puhYMrMo1K")
     }
 }

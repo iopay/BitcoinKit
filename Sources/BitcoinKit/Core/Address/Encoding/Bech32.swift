@@ -118,7 +118,7 @@ public struct Bech32 {
         }
 
         // Drop checksum
-        guard let bytes = try? convertFrom5bit(data: payload.dropLast(8)) else {
+        guard let bytes = try? convertFrom5bit(data: payload.dropLast(6).dropFirst()) else {
             return nil
         }
         return (prefix, Data(bytes))
@@ -129,7 +129,7 @@ public struct Bech32 {
     }
 
     internal static func verifyChecksum(prefix: String, payload: Data) -> Bool {
-        return PolyMod(expand(prefix) + payload) == 0
+        return polymod(expand(prefix) + payload) == 1
     }
 
     internal static func expand(_ hrp: String) -> Data {
@@ -213,12 +213,13 @@ public struct Bech32 {
         var acc = Int()
         var bits = UInt8()
         let maxv: Int = 255 // 255 = 0xff = 11111111
+        let maxAcc: Int = (1 << (5 + 8 - 1)) - 1
         var converted: [UInt8] = []
         for d in data {
             guard (d >> 5) == 0 else {
                 throw DecodeError.invalidCharacter
             }
-            acc = (acc << 5) | Int(d)
+            acc = ((acc << 5) | Int(d)) & maxAcc
             bits += 5
 
             while bits >= 8 {

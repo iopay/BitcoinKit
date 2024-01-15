@@ -119,4 +119,25 @@ extension BitcoinAddress {
 
         return prefix + base32
     }
+
+    public init(bech32: String) throws {
+        guard let (prefix, hash) = Bech32.decode(bech32, separator: "1") else {
+            throw AddressError.invalid
+        }
+        guard let hashSize = HashSize(sizeInBits: hash.count * 8) else {
+            throw AddressError.invalidDataSize
+        }
+        self.data = hash
+        self.hashSize = hashSize
+        self.hashType = .scriptHash
+
+        switch prefix {
+        case "bc":
+            network = .mainnetBTC
+        case "tb":
+            network = .testnetBTC
+        default:
+            throw AddressError.invalidVersionByte
+        }
+    }
 }
