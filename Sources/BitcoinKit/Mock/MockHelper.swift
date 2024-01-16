@@ -46,7 +46,6 @@ public struct MockHelper {
         let changeAddress: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
         // 1. inputs
         let unsignedInputs = [TransactionInput(previousOutput: unspentTransaction.outpoint,
-                                               signatureScript: Data(),
                                                sequence: UInt32.max)]
 
         // 2. outputs
@@ -75,8 +74,8 @@ public struct MockHelper {
         // Sequence may need to be updated
         let txin = inputs[i]
         inputs[i] = TransactionInput(previousOutput: txin.previousOutput,
-                                     signatureScript: unlockScriptData,
-                                     sequence: txin.sequence)
+                                     sequence: txin.sequence,
+                                     signatureScript: unlockScriptData)
 
         return Transaction(version: tx.version,
                            inputs: inputs,

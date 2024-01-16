@@ -109,7 +109,7 @@ class Bech32Tetst: XCTestCase {
         let address = try BitcoinAddress(data: hash, hashType: .pubkeyHash, network: .testnetBTC)
         XCTAssertEqual(address.legacy, "msDtSbsvsGycRVZpcm6d5YA6puhYMrMo1K")
         print(hash.hex)
-
+//try BitcoinAddress(legacy: "msDtSbsvsGycRVZpcm6d5YA6puhYMrMo1K")
         let words = Bech32.convertTo5bit(data: hash, pad: true)
         print(words.map({ $0 }))
 

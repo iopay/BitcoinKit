@@ -89,4 +89,37 @@ class TransactionTests: XCTestCase {
         let tx = Transaction.deserialize(data)
         XCTAssert(tx.isCoinbase())
     }
+
+    func testSignWitness() throws {
+        let pk = try PrivateKey(wif: "cMaiBc8cCbUcM4uyBCHfDabidYUR8EACuSm9rgRkxQPCsBma4sbX")
+        let s1 = try Script().append(.OP_0).appendData(Data(hex: "806738d85849e50bce67d5d9d4dd7fb025ffd972")).data
+        let s2 = try Script().append(.OP_0).appendData(Data(hex: "e5495ffe01a0598c25d2470d56742effe75237a7")).data
+        let balance: UInt64 = 116000
+        let amount: UInt64  = 10000
+        let fee: UInt64 = 22968
+
+        let utxos = [
+            TransactionOutPoint(hash: Data(Data(hex: "a42e65df3ced1c950bcc5612d4599692143987c3869c817f49b41d402218b983").reversed()), index: 2),
+            TransactionOutPoint(hash: Data(Data(hex: "669634d8d40559c8b14037680e1b81b1981f285f62f3b8a95806aa74febd9378").reversed()), index: 7),
+            TransactionOutPoint(hash: Data(Data(hex: "31f788003fbc05424bf57d044228e82b34f81d401fe31291838973823bcd6d43").reversed()), index: 0)
+        ]
+
+        let inputs = utxos.map {
+            TransactionInput(previousOutput: $0, sequence: UInt32.max)
+        }
+        let outputs = [
+            TransactionOutput(value: amount, lockingScript: s2),
+            TransactionOutput(value: balance - amount - fee, lockingScript: s1)
+        ]
+        let unspent = [
+            UnspentTransaction(output: .init(value: 8000, lockingScript: s1), outpoint: utxos[0]),
+            UnspentTransaction(output: .init(value: 8000, lockingScript: s1), outpoint: utxos[1]),
+            UnspentTransaction(output: .init(value: 100000, lockingScript: s1), outpoint: utxos[2])
+        ]
+        let tx = Transaction(version: 2, inputs: inputs, outputs: outputs, lockTime: 0)
+        let signer = TransactionSigner(unspentTransactions: unspent, transaction: tx, sighashHelper: BTCSignatureHashHelper(hashType: .ALL))
+        let signedTx = try signer.sign(with: [pk])
+        print(signedTx.serialized().hex)
+        XCTAssertEqual(signedTx.serialized().hex, "0200000000010383b91822401db4497f819c86c3873914929659d41256cc0b951ced3cdf652ea40200000000ffffffff7893bdfe74aa0658a9b8f3625f281f98b1811b0e683740b1c85905d4d83496660700000000ffffffff436dcd3b827389839112e31f401df8342be82842047df54b4205bc3f0088f7310000000000ffffffff021027000000000000160014e5495ffe01a0598c25d2470d56742effe75237a75844010000000000160014806738d85849e50bce67d5d9d4dd7fb025ffd97202483045022100c613ee699949584b5bc92b6157786e004a1a69de72ec3cacae8ddafb4b6c97eb0220541a0f1b1f405710ed4aa67cd74d0d009a4bd21a2716cbaba04d5f5c043014a501210330d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a590247304402204fc4e885039f6772a5a5708fbc34889801774ebd75b568ea4866cc97a8e9b6ee02201be3fa0d5fb890a7228e60f38cbd5c9d9d0568d0732945647f3672c357f0e72401210330d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a5902483045022100fdc44fbc6dd2268c878b8a11b92f1abe36ca983889cb23e68ce2dd14f64ce6da02200b1bef64fef7bd00a93ea625cfb63f3dd9a227c4b29a7ec970f5e58a800fbd6301210330d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a5900000000")
+    }
 }

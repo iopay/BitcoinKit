@@ -492,7 +492,11 @@ extension Script {
     }
 
     public static func getPublicKeyHash(from script: Data) -> Data {
-        return script[3..<23]
+        if script[0] == Op0().value {
+            script[2...]
+        } else {
+            script[3..<23]
+        }
     }
 }
 

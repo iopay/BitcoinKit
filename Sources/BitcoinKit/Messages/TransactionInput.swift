@@ -34,13 +34,16 @@ public struct TransactionInput {
     }
     /// Computational Script for confirming transaction authorization
     public let signatureScript: Data
+
+    public let witness: [Data]
     /// Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
     public let sequence: UInt32
 
-    public init(previousOutput: TransactionOutPoint, signatureScript: Data, sequence: UInt32) {
+    public init(previousOutput: TransactionOutPoint, sequence: UInt32, signatureScript: Data? = nil, witness: [Data]? = nil) {
         self.previousOutput = previousOutput
-        self.signatureScript = signatureScript
+        self.signatureScript = signatureScript ?? Data()
         self.sequence = sequence
+        self.witness = witness ?? []
     }
 
     public func isCoinbase() -> Bool {
@@ -62,6 +65,6 @@ public struct TransactionInput {
         let scriptLength = byteStream.read(VarInt.self)
         let signatureScript = byteStream.read(Data.self, count: Int(scriptLength.underlyingValue))
         let sequence = byteStream.read(UInt32.self)
-        return TransactionInput(previousOutput: previousOutput, signatureScript: signatureScript, sequence: sequence)
+        return TransactionInput(previousOutput: previousOutput, sequence: sequence, signatureScript: signatureScript)
     }
 }

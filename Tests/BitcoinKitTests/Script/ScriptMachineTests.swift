@@ -54,7 +54,7 @@ class ScriptMachineTests: XCTestCase {
         let sending = TransactionOutput(value: amount, lockingScript: lockingScript1)
         let payback = TransactionOutput(value: balance - amount - fee, lockingScript: lockingScript2)
         let subScript = Data(hex: "76a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac")
-        let inputForSign = TransactionInput(previousOutput: outpoint, signatureScript: subScript, sequence: UInt32.max)
+        let inputForSign = TransactionInput(previousOutput: outpoint, sequence: UInt32.max, signatureScript: subScript)
         let unsignedTx = Transaction(version: 1, inputs: [inputForSign], outputs: [sending, payback], lockTime: 0)
         
         // sign
@@ -74,7 +74,7 @@ class ScriptMachineTests: XCTestCase {
             .appendData(fromPublicKey.data)
         
         // signed tx
-        let txin = TransactionInput(previousOutput: outpoint, signatureScript: unlockScript.data, sequence: UInt32.max)
+        let txin = TransactionInput(previousOutput: outpoint, sequence: UInt32.max, signatureScript: unlockScript.data)
         let signedTx = Transaction(version: 1, inputs: [txin], outputs: [sending, payback], lockTime: 0)
         
         // crypto verify

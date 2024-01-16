@@ -46,8 +46,8 @@ public struct BTCSignatureHashHelper: SignatureHashHelper {
         let subScript = Script(data: utxoOutput.lockingScript)!
         try! subScript.deleteOccurrences(of: .OP_CODESEPARATOR)
         return TransactionInput(previousOutput: txin.previousOutput,
-                                signatureScript: subScript.data,
-                                sequence: txin.sequence)
+                                sequence: txin.sequence,
+                                signatureScript: subScript.data)
     }
 
     /// Create a blank transaction input
@@ -59,8 +59,8 @@ public struct BTCSignatureHashHelper: SignatureHashHelper {
             sequence = txin.sequence
         }
         return TransactionInput(previousOutput: txin.previousOutput,
-                                signatureScript: Data(),
-                                sequence: sequence)
+                                sequence: sequence,
+                                signatureScript: Data())
     }
 
     /// Create the transaction inputs
@@ -119,6 +119,7 @@ public struct BTCSignatureHashHelper: SignatureHashHelper {
             //  tx.outputs[inputIndex] out of range
             return one
         }
+        
 
         // Modified Raw Transaction to be serialized
         let rawTransaction = Transaction(version: tx.version,

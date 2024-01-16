@@ -77,21 +77,85 @@ public final class TransactionSigner {
                 throw TransactionSignerError.noKeyFound
             }
 
-            // Sign transaction hash
-            let sighash: Data = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
+            let sighash: Data
+            if isP2WPKH(utxo.lockingScript) {
+                let signingScript = try! Script().append(.OP_DUP)
+                    .append(.OP_HASH160)
+                    .appendData(pubkeyHash)
+                    .append(.OP_EQUALVERIFY)
+                    .append(.OP_CHECKSIG).data
+                sighash = transaction.hashForWitnessV0(index: i, prevOutScript: signingScript, value: utxo.value, hashType: sighashHelper.hashType)
+            } else {
+
+                // Sign transaction hash
+                sighash = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
+            }
             let signature: Data = try Crypto.sign(sighash, privateKey: key)
             let txin = signedInputs[i]
             let pubkey = key.publicKey()
 
             // Create Signature Script
             let sigWithHashType: Data = signature + [sighashHelper.hashType.uint8]
-            let unlockingScript: Script = try Script()
-                .appendData(sigWithHashType)
-                .appendData(pubkey.data)
+            let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: unspentTransaction, signature: sigWithHashType, pubkey: pubkey.data)
 
             // Update TransactionInput
-            signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, signatureScript: unlockingScript.data, sequence: txin.sequence)
+            signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: finalScriptSig, witness: finalScriptWitness)
         }
         return signedTransaction
     }
+}
+
+public func isP2WPKH(_ data: Data) -> Bool {
+    data.count == 22 &&
+    data[0] == Op0().value &&
+    data[1] == 0x14
+}
+
+public func isP2PKH(_ data: Data) -> Bool {
+    data.count == 25 &&
+    data[0] == OpDuplicate().value &&
+    data[1] == OpHash160().value &&
+    data[2] == 0x14 &&
+    data[23] == OpEqualVerify().value &&
+    data[24] == OpCheckSig().value
+}
+
+//function classifyScript(script: Buffer): ScriptType {
+//  if (isP2WPKH(script)) return 'witnesspubkeyhash';
+//  if (isP2PKH(script)) return 'pubkeyhash';
+//  if (isP2MS(script)) return 'multisig';
+//  if (isP2PK(script)) return 'pubkey';
+//  return 'nonstandard';
+//}
+func prepareFinalScripts(input: UnspentTransaction, signature: Data, pubkey: Data) -> (Data?, [Data]?) {
+    var finalScriptSig: Data? = nil
+    var finalScriptWitness: [Data]? = nil
+
+    if input.isSegwit {
+        if input.isP2WSH {
+            // TODO
+        } else {
+            finalScriptWitness = [signature, pubkey]
+        }
+        if input.isP2SH {
+            // TODO
+        }
+    } else {
+        if input.isP2SH {
+            // TODO
+        } else {
+            finalScriptSig = try! Script().appendData(signature).appendData(pubkey).data
+        }
+    }
+    return (finalScriptSig, finalScriptWitness)
+}
+
+func witnessStackToScriptWitness(witness: [Data]) -> Data {
+    var data = Data()
+    data += VarInt(witness.count).serialized()
+    witness.forEach {
+        data += VarInt($0.count).serialized()
+        data += $0
+    }
+    return data
 }

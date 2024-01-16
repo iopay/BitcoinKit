@@ -106,7 +106,7 @@ class TransactionBuilderTests: XCTestCase {
         let outputPoint = TransactionOutPoint(hash: preHash, index: 8)
         let utxo = UnspentTransaction(output: .init(value: balance, lockingScript: Data(hex: "76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac")), outpoint: outputPoint)
 
-        let input = TransactionInput(previousOutput: outputPoint, signatureScript: Data(), sequence: UInt32.max)
+        let input = TransactionInput(previousOutput: outputPoint, sequence: UInt32.max)
         let output1 = TransactionOutput(value: amount, lockingScript: Script(address: to)!.data)
         let output2 = TransactionOutput(value: balance - amount - fee, lockingScript: Script(address: from)!.data)
         let tx = Transaction(version: 1, inputs: [input], outputs: [output1, output2], lockTime: 0)

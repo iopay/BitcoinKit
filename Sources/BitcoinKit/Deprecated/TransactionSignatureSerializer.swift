@@ -57,7 +57,7 @@ public struct TransactionSignatureSerializer {
             sigScript = Data()
             sequence = txin.sequence
         }
-        return TransactionInput(previousOutput: txin.previousOutput, signatureScript: sigScript, sequence: sequence)
+        return TransactionInput(previousOutput: txin.previousOutput, sequence: sequence, signatureScript: sigScript)
     }
 
     public func serialize() -> Data {

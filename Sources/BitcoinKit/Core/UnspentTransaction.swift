@@ -33,3 +33,21 @@ public struct UnspentTransaction {
         self.outpoint = outpoint
     }
 }
+
+extension UnspentTransaction {
+    var isP2SH: Bool {
+        false
+    }
+
+    var isP2WSH: Bool {
+        false
+    }
+
+    var isSegwit: Bool {
+        isP2WSH || isP2WPKH(script)
+    }
+
+    var script: Data {
+        output.lockingScript
+    }
+}

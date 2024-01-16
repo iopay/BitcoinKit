@@ -27,6 +27,8 @@ import Foundation
 
 /// tx describes a bitcoin transaction, in reply to getdata
 public struct Transaction {
+    private let ADVANCED_TRANSACTION_MARKER: UInt8 = 0x00
+    private let ADVANCED_TRANSACTION_FLAG: UInt8 = 0x01
     /// Transaction data format version (note, this is signed)
     public let version: UInt32
     /// If present, always 0001, and indicates the presence of witness data
@@ -56,6 +58,15 @@ public struct Transaction {
         return Data(txHash.reversed()).hex
     }
 
+    public var hasWitnesses: Bool {
+        for ins in inputs {
+            if ins.witness.count != 0 {
+                return true
+            }
+        }
+        return false
+    }
+
     public init(version: UInt32, inputs: [TransactionInput], outputs: [TransactionOutput], lockTime: UInt32) {
         self.version = version
         self.inputs = inputs
@@ -66,10 +77,23 @@ public struct Transaction {
     public func serialized() -> Data {
         var data = Data()
         data += version
+        if hasWitnesses {
+            data += ADVANCED_TRANSACTION_MARKER
+            data += ADVANCED_TRANSACTION_FLAG
+        }
         data += txInCount.serialized()
         data += inputs.flatMap { $0.serialized() }
         data += txOutCount.serialized()
         data += outputs.flatMap { $0.serialized() }
+        if hasWitnesses {
+            inputs.forEach { ins in
+                data += VarInt(ins.witness.count).data
+                ins.witness.forEach { wit in
+                    data += VarInt(wit.count).data
+                    data += wit
+                }
+            }
+        }
         data += lockTime
         return data
     }
@@ -97,5 +121,56 @@ public struct Transaction {
         }
         let lockTime = byteStream.read(UInt32.self)
         return Transaction(version: version, inputs: inputs, outputs: outputs, lockTime: lockTime)
+    }
+}
+
+extension Transaction {
+    func hashForWitnessV0(index: Int, prevOutScript: Data, value: UInt64, hashType: SighashType) -> Data {
+        var hashOutputs = Data()
+        var hashPrevouts = Data()
+        var hashSequence = Data()
+
+        if !hashType.isAnyoneCanPay {
+            var data = Data()
+            for txIn in inputs {
+                data += txIn.previousOutput.serialized()
+            }
+
+            hashPrevouts = Crypto.sha256sha256(data)
+        }
+
+        if !hashType.isAnyoneCanPay && !hashType.isSingle && !hashType.isNone {
+            var data = Data()
+            for txIn in inputs {
+                data += txIn.sequence
+            }
+            hashSequence = Crypto.sha256sha256(data)
+        }
+
+        if !hashType.isSingle && !hashType.isNone {
+            var data = Data()
+            for txOut in outputs {
+                data += txOut.serialized()
+            }
+            hashOutputs = Crypto.sha256sha256(data)
+        } else if hashType.isSingle && index < outputs.count {
+            hashOutputs = Crypto.sha256sha256(outputs[0].serialized())
+        }
+
+        let txIn = inputs[index]
+        var data = Data()
+        data += version
+        data += hashPrevouts
+        data += hashSequence
+        data += txIn.previousOutput.hash
+        data += txIn.previousOutput.index
+        data += VarInt(prevOutScript.count).serialized()
+        data += prevOutScript
+        data += value
+        data += txIn.sequence
+        data += hashOutputs
+        data += lockTime
+        data += hashType.uint32
+        return Crypto.sha256sha256(data)
     }
 }

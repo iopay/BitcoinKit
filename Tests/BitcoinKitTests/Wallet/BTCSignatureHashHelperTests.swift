@@ -51,7 +51,7 @@ class BTCSignatureHashHelperTests: XCTestCase {
         let sending = TransactionOutput(value: amount, lockingScript: lockingScript1)
         let payback = TransactionOutput(value: balance - amount - fee, lockingScript: lockingScript2)
         
-        let unsignedInputs: [TransactionInput] = [TransactionInput(previousOutput: outpoint, signatureScript: Data(), sequence: UInt32.max)]
+        let unsignedInputs: [TransactionInput] = [TransactionInput(previousOutput: outpoint, sequence: UInt32.max)]
         transaction = Transaction(version: 1,
                                   inputs: unsignedInputs,
                                   outputs: [sending, payback],
