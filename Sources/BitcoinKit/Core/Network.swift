@@ -35,6 +35,8 @@ open class Network {
     public static let mainnetBTC: Network = BTCMainnet()
     public static let testnetBTC: Network = BTCTestnet()
 
+    open var bech32Prefix: String { fatalError("Network.bech32Prefix must be implemented.") }
+
     /// Network name i.e. livenet/testnet
     open var name: String { fatalError("Network.name must be implemented.") }
     /// Network name alias i.e. mainnet/regtest
@@ -219,6 +221,9 @@ public class Mainnet: Network {
     override public var port: UInt32 {
         return 8333
     }
+    public override var bech32Prefix: String {
+        "bc"
+    }
     /// blockchain checkpoints - these are also used as starting points for partial chain downloads, so they need to be at
     /// difficulty transition boundaries in order to verify the block difficulty at the immediately following transition
     override public var checkpoints: [Checkpoint] {
@@ -283,6 +288,10 @@ public class Testnet: Network {
     override public var port: UInt32 {
         return 18_333
     }
+    public override var bech32Prefix: String {
+        "tb"
+    }
+    
     override public var checkpoints: [Checkpoint] {
         return [
             Checkpoint(height: 0, hash: Data(Data(hex: "000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943").reversed()), timestamp: 1_376_543_922, target: 0x1d00ffff),

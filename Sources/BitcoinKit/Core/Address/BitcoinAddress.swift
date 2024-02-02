@@ -97,27 +97,10 @@ extension BitcoinAddress: QRCodeConvertible {}
 #endif
 
 extension BitcoinAddress {
-    public var bech32Prefix: String {
-        switch network {
-        case .mainnetBCH, .mainnetBTC:
-            return "bc"
-        default:
-            return "tb"
-        }
-    }
 
     public var bech32: String {
         let words: Data = [0x00] + Bech32.convertTo5bit(data: data, pad: true)
-        let prefix = bech32Prefix
-        let checksumUint5: Data = Bech32.createChecksum(prefix: prefix, payload: words) // Data of [UInt5]
-        let combined: Data = words + checksumUint5 // Data of [UInt5]
-        var base32 = "1"
-        for b in combined {
-            let index = String.Index(utf16Offset: Int(b), in: Bech32.base32Alphabets)
-            base32 += String(Bech32.base32Alphabets[index])
-        }
-
-        return prefix + base32
+        return Bech32.encode(payload: words, prefix: network.bech32Prefix, separator: "1")
     }
 
     public init(bech32: String) throws {

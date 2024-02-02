@@ -56,22 +56,41 @@ public struct Bech32 {
     ///   - payload: The data to encode
     ///   - prefix: The prefix of the encoded text. It is also used to create checksum.
     ///   - separator: separator that separates prefix and Base32 encoded text
-    public static func encode(payload: Data, prefix: String, separator: String = ":") -> String {
-        let payloadUint5 = convertTo5bit(data: payload, pad: true)
-        let checksumUint5: Data = createChecksum(prefix: prefix, payload: payloadUint5) // Data of [UInt5]
-        let combined: Data = payloadUint5 + checksumUint5 // Data of [UInt5]
-        var base32 = ""
-        for b in combined {
-            let index = String.Index(utf16Offset: Int(b), in: base32Alphabets)
-            base32 += String(base32Alphabets[index])
+//    public static func encode(payload: Data, prefix: String, separator: String = ":") -> String {
+//        let payloadUint5 = convertTo5bit(data: payload, pad: true)
+//        let checksumUint5: Data = createChecksum(prefix: prefix, payload: payloadUint5) // Data of [UInt5]
+//        let combined: Data = payloadUint5 + checksumUint5 // Data of [UInt5]
+//        var base32 = ""
+//        for b in combined {
+//            let index = String.Index(utf16Offset: Int(b), in: base32Alphabets)
+//            base32 += String(base32Alphabets[index])
+//        }
+//
+//        var chk = expand(prefix)
+//        return prefix + separator + base32
+//    }
+
+    public static func encode(payload: Data, prefix: String, separator: String = ":", const: UInt32 = 1) -> String {
+        var chk = prefixChk(prefix)
+        var result = prefix + separator
+        for x in payload {
+            if x >> 5 != 0 {
+                fatalError("Non 5-bit word")
+            }
+            chk = polymodStep(chk) ^ UInt32(x)
+            let index = String.Index(utf16Offset: Int(x), in: base32Alphabets)
+            result += String(base32Alphabets[index])
         }
-
-        return prefix + separator + base32
-    }
-
-    @available(*, unavailable, renamed: "encode(payload:prefix:separator:)")
-    public static func encode(_ bytes: Data, prefix: String, seperator: String = ":") -> String {
-        return encode(payload: bytes, prefix: prefix, separator: seperator)
+        for _ in 0..<6 {
+            chk = polymodStep(chk)
+        }
+        chk ^= const
+        for i in 0..<6 {
+            let v = (chk >> ((5 - i) * 5)) & 0x1f
+            let index = String.Index(utf16Offset: Int(v), in: base32Alphabets)
+            result += String(base32Alphabets[index])
+        }
+        return result
     }
 
     /// Decodes the Bech32 encoded string to original payload
@@ -123,23 +142,12 @@ public struct Bech32 {
         }
         return (prefix, Data(bytes))
     }
-    @available(*, unavailable, renamed: "decode(string:separator:)")
-    public static func decode(_ string: String, seperator: String = ":") -> (prefix: String, data: Data)? {
-        return decode(string, separator: seperator)
-    }
 
     internal static func verifyChecksum(prefix: String, payload: Data) -> Bool {
         return polymod(expand(prefix) + payload) == 1
     }
 
     internal static func expand(_ hrp: String) -> Data {
-//        var ret: Data = Data()
-//        let buf: [UInt8] = Array(prefix.utf8)
-//        for b in buf {
-//            ret += b & 0x1f
-//        }
-//        ret += Data(repeating: 0, count: 1)
-//        return ret
         guard let hrpBytes = hrp.data(using: .utf8) else { return Data() }
         var result = Data(repeating: 0x00, count: hrpBytes.count*2+1)
         for (i, c) in hrpBytes.enumerated() {
@@ -160,6 +168,21 @@ public struct Bech32 {
         return ret
     }
 
+    static func prefixChk(_ prefix: String) -> UInt32 {
+        var chk: UInt32 = 1
+        for c in prefix.utf8 {
+            guard c >= 33 && c <= 126 else {
+                fatalError("Invalid prefix: \(prefix)")
+            }
+            chk = polymodStep(chk) ^ (UInt32(c) >> 5)
+        }
+        chk = polymodStep(chk)
+        for v in prefix.utf8 {
+            chk = polymodStep(chk) ^ (UInt32(v) & 0x1f)
+        }
+        return chk
+    }
+
     private static let gen: [UInt32] = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
     private static func polymod(_ values: Data) -> UInt32 {
         var chk: UInt32 = 1
@@ -169,6 +192,15 @@ public struct Bech32 {
             for i: UInt8 in 0..<5 {
                 chk ^= ((top >> i) & 1) == 0 ? 0 : gen[Int(i)]
             }
+        }
+        return chk
+    }
+
+    static func polymodStep(_ pre: UInt32) -> UInt32 {
+        let b = pre >> 25;
+        var chk = (pre & 0x1ffffff) << 5
+        for i: UInt8 in 0..<5 {
+            chk ^= ((b >> i) & 1) == 0 ? 0 : gen[Int(i)]
         }
         return chk
     }

@@ -38,4 +38,8 @@ extension PublicKey {
     public func toBitcoinAddress() -> BitcoinAddress {
         return try! BitcoinAddress(data: pubkeyHash, hashType: .pubkeyHash, network: network)
     }
+
+    public func taproot() -> Taproot {
+        Taproot(pubKey: data, network: network)
+    }
 }

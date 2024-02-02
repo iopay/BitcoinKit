@@ -122,4 +122,14 @@ class Bech32Tetst: XCTestCase {
         let addr2 = try BitcoinAddress(bech32: "tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg")
         XCTAssertEqual(addr2.legacy, "msDtSbsvsGycRVZpcm6d5YA6puhYMrMo1K")
     }
+    
+    func testTaproot() throws {
+        let pub = Data(hex: "0330d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a59")
+        let pub2 = pub.count == 32 ? pub : pub.dropFirst()
+        
+        let words: Data = [0x01] + Bech32.convertTo5bit(data: pub2, pad: true)
+        let prefix = "tb"
+        let taproot = Bech32m.encode(payload: words, prefix: prefix, separator: "1")
+        XCTAssertEqual(taproot, "tb1pxr2zk4kq3a8e5rl2r59vnxf6gl2lsxrnkmv4ztp95ayakjgsffvs522z2m")
+    }
 }
