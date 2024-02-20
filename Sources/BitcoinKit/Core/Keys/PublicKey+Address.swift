@@ -42,4 +42,12 @@ extension PublicKey {
     public func taproot() -> Taproot {
         Taproot(pubKey: data, network: network)
     }
+
+    public func nestedSegwit() -> NestedSegwit {
+        NestedSegwit(pubKey: data, network: network)
+    }
+
+    public func nativeSegwit() -> NativeSegwit {
+        NativeSegwit(pubKey: data, network: network)
+    }
 }
