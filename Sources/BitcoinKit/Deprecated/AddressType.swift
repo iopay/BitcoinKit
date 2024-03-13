@@ -24,5 +24,5 @@
 
 import Foundation
 
-@available(*, deprecated, renamed: "BitcoinAddress.HashType")
-public typealias AddressType = BitcoinAddress.HashType
+//@available(*, deprecated, renamed: "BitcoinAddress.HashType")
+//public typealias AddressType = BitcoinAddress.HashType

@@ -34,6 +34,7 @@ public struct TransactionInput {
     }
     /// Computational Script for confirming transaction authorization
     public let signatureScript: Data
+//    public let redeemScript: Data?
 
     public let witness: [Data]
     /// Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
@@ -44,6 +45,7 @@ public struct TransactionInput {
         self.signatureScript = signatureScript ?? Data()
         self.sequence = sequence
         self.witness = witness ?? []
+//        self.redeemScript = redeemScript
     }
 
     public func isCoinbase() -> Bool {

@@ -47,6 +47,16 @@ public struct TransactionOutput {
         self.lockingScript = lockingScript
     }
 
+    public init(value: UInt64, address: AddressType) {
+        self.value = value
+        self.lockingScript = address.script
+    }
+
+    public init(value: UInt64, address: String) throws {
+        self.value = value
+        self.lockingScript = try createAddressFromString(address).script
+    }
+
     public init() {
         self.init(value: 0, lockingScript: Data())
     }

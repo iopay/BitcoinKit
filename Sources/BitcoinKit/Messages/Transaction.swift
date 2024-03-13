@@ -173,4 +173,115 @@ extension Transaction {
         data += hashType.uint32
         return Crypto.sha256sha256(data)
     }
+
+    func hashForWitnessV1(index: Int, prevOutScripts: [Data], values: [UInt64], hashType: SighashType, leafHash: Data? = nil, annex: Data? = nil) -> Data {
+        precondition(prevOutScripts.count == inputs.count)
+        precondition(values.count == inputs.count)
+
+        var hashPrevouts = Data()
+        var hashAmounts = Data()
+        var hashScriptPubKeys = Data()
+        var hashSequences = Data()
+        var hashOutputs = Data()
+
+        if !hashType.inputIsAnyoneCanPay {
+//            var data = Data(capacity: 36 * inputs.count)
+
+            hashPrevouts = Data(inputs.flatMap({ $0.previousOutput.serialized() })).sha256()
+
+            var data = Data(capacity: 8 * inputs.count)
+            values.forEach { data += $0 }
+            hashAmounts = data.sha256()
+
+            data = Data(capacity: prevOutScripts.map { $0.count }.reduce(0, +))
+            prevOutScripts.forEach { script in
+                data += VarInt(script.count).serialized()
+                data += script
+            }
+            hashScriptPubKeys = data.sha256()
+
+            data = Data(capacity: 4 * inputs.count)
+            inputs.forEach { input in
+                data += input.sequence
+            }
+            hashSequences = data.sha256()
+        }
+
+        if !(hashType.isNone || hashType.isSingle) {
+            hashOutputs = Data(outputs.flatMap({ $0.serialized() })).sha256()
+        } else if hashType.isSingle && index < outputs.count {
+            let out = outputs[index]
+            hashOutputs = out.serialized().sha256()
+        }
+
+        let spendType: UInt8 = ((leafHash != nil) ? 2 : 0) + ((annex != nil) ? 1 : 0)
+        let sigMsgSize = 174 -
+            (hashType.inputIsAnyoneCanPay ? 49 : 0) -
+            (hashType.isNone ? 32 : 0) +
+            ((annex != nil) ? 32 : 0) +
+            ((leafHash != nil) ? 37 : 0)
+
+        var data = Data()
+        data += hashType.uint8
+        data += version
+        data += lockTime
+        data += hashPrevouts
+        data += hashAmounts
+        data += hashScriptPubKeys
+        data += hashSequences
+        if !(hashType.isNone || hashType.isSingle) {
+            data += hashOutputs
+        }
+        data += spendType
+
+        if hashType.inputIsAnyoneCanPay {
+            let input = inputs[index]
+            data += input.previousOutput.serialized()
+            data += values[index]
+            data += VarInt(prevOutScripts[index].count).serialized()
+            data += prevOutScripts[index]
+            data += input.sequence
+        } else {
+            data += UInt32(index)
+        }
+
+        if annex != nil {
+            data += (VarInt(annex!.count).serialized() + annex!).sha256()
+        }
+
+        if hashType.isSingle {
+            data += hashOutputs
+        }
+
+        if leafHash != nil {
+            data += leafHash!
+            data += UInt8(0)
+            data += UInt32(0xffffffff)
+        }
+
+        return taggedHash(.TapSighash, data: [0x00] + data)
+    }
+
+    func getTaprootHashesForSig(inputs: [UnspentTransaction], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
+        let prevOuts = inputs.map { ($0.output.value, $0.script ) }
+        let signingScripts = inputs.map { $0.script }
+        let values = inputs.map { $0.output.value }
+
+        var hashes = [(hash: Data, leafHash: Data?)]()
+
+        if inputs[inputIndex].tapInternalKey != nil {
+            let script = signingScripts[inputIndex]
+            let outputKey = isP2TR(script) ? script[2..<34] : Data()
+            if toXOnly(publicKey) == outputKey {
+                let tapKeyHash = hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
+                hashes.append((tapKeyHash, nil))
+            }
+        }
+
+//        let tapLeafHashes = inputs[inputIndex].
+        /// TODO:
+
+        return hashes
+    }
+
 }

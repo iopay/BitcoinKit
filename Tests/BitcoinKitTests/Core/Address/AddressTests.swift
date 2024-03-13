@@ -118,4 +118,11 @@ class AddressTests: XCTestCase {
             XCTFail("Should throw wrong network invalid scheme error.")
         }
     }
+
+    func testDecode() throws {
+        XCTAssertEqual(try createAddressFromString("msDtSbsvsGycRVZpcm6d5YA6puhYMrMo1K").script.hex, "76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac")
+        XCTAssertEqual(try createAddressFromString("tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg").script.hex, "0014806738d85849e50bce67d5d9d4dd7fb025ffd972")
+        XCTAssertEqual(try createAddressFromString("2NC8Niik7EMYu9MQDo4mJV3moi8GKQkEAx3").script.hex, "a914cf1ec4593539358f73d008abc1e7023257a8cb1f87")
+        XCTAssertEqual(try createAddressFromString("tb1pxr2zk4kq3a8e5rl2r59vnxf6gl2lsxrnkmv4ztp95ayakjgsffvs522z2m").script.hex, "512030d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a59")
+    }
 }

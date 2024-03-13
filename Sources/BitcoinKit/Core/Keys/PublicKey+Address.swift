@@ -40,7 +40,7 @@ extension PublicKey {
     }
 
     public func taproot() -> Taproot {
-        Taproot(pubKey: data, network: network)
+        Taproot(internalKey: data.xOnly, network: network)
     }
 
     public func nestedSegwit() -> NestedSegwit {
@@ -49,5 +49,17 @@ extension PublicKey {
 
     public func nativeSegwit() -> NativeSegwit {
         NativeSegwit(pubKey: data, network: network)
+    }
+}
+
+extension PublicKey {
+    var xOnly: Data {
+        data.xOnly
+    }
+}
+
+extension Data {
+    var xOnly: Data {
+        toXOnly(self)
     }
 }

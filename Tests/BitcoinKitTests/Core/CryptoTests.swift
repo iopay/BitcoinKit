@@ -59,4 +59,27 @@ class CryptoTests: XCTestCase {
         let result = Crypto.hmacsha512(data: testStr.data(using: .utf8)!, key: secretKey.data(using: .utf8)!)
         XCTAssertEqual(result?.hex, "051464ad12cd03cf6c0f968317dfcededafeb8a267d6da7869e0588aa887bde6f4f0fe2077aed2a32a748c9e2d59ddc2bb7c3f034a4aa9fc9b0752c750daae94")
     }
+
+    func testSignSchnorr() throws {
+        let pk = try PrivateKey(wif: "cMaiBc8cCbUcM4uyBCHfDabidYUR8EACuSm9rgRkxQPCsBma4sbX")
+        let tweaked = pk.tweak(taggedHash(.TapTweak, data: pk.publicKey().xOnly))
+
+//        let signed = try
+
+        XCTAssertEqual(tweaked.data.hex, "1b35e8a6a1b43af6295e9f13734e54e77be515ca490729accc6d99d43ab4824c")
+        XCTAssertEqual(pk.publicKey().data.sha256().hex, "bd4dabd41b0ea82c40c8acede2279cc756e156fb1947259a036e87e5fc37cb4e")
+        try XCTAssertEqual(_Crypto.signSchnorr(pk.publicKey().data.sha256(), with: tweaked.data).hex, "28cb00079c9f4e7cf7deae769c9d9e4f7e2e3e003f252e96e8838eece4d82fb3b667280afad442891f9b3fea04936e18bbe9f6a11106e69fb73ab47f350ac001")
+
+        try XCTAssertEqual(_Crypto.signSchnorr(
+            Data(hex: "7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c"),
+            with: Data(hex: "c90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b14e5c9"),
+            extra: Data(hex: "c87aa53824b4d7ae2eb035a2b5bbbccc080e76cdc6d1692c4b0b62d798e6d906")
+        ).hex, "5831aaeed7b44bb74e5eab94ba9d4294c49bcf2a60728d8b4c200f50dd313c1bab745879a5ad954a72c45a91c3a51d3c7adea98d82f8481e0e1e03674a6f3fb7")
+
+        try XCTAssertEqual(_Crypto.signSchnorr(
+            Data(hex: "0000000000000000000000000000000000000000000000000000000000000000"),
+            with: Data(hex: "0000000000000000000000000000000000000000000000000000000000000003"),
+            extra: Data(hex: "0000000000000000000000000000000000000000000000000000000000000000")
+        ).hex, "e907831f80848d1069a5371b402410364bdf1c5f8307b0084c55f1ce2dca821525f66a4a85ea8b71e482a74f382d2ce5ebeee8fdb2172f477df4900d310536c0")
+    }
 }

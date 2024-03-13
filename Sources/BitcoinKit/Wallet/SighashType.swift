@@ -31,6 +31,7 @@ private let SIGHASH_FORK_ID: UInt8 = 0x40 // 01000000
 private let SIGHASH_ANYONECANPAY: UInt8 = 0x80 // 10000000
 
 private let SIGHASH_OUTPUT_MASK: UInt8 = 0x1f // 00011111
+private let SIGHASH_INPUT_MASK: UInt8 = 0x80
 
 public protocol SighashType {
     var rawValue: UInt8 { get }
@@ -57,6 +58,14 @@ public extension SighashType {
     }
     var isAnyoneCanPay: Bool {
         return (self.uint8 & SIGHASH_ANYONECANPAY) != 0
+    }
+
+    var inputType: UInt8 {
+        self.uint8 & SIGHASH_INPUT_MASK
+    }
+
+    var inputIsAnyoneCanPay: Bool {
+        inputType == SIGHASH_ANYONECANPAY
     }
 }
 

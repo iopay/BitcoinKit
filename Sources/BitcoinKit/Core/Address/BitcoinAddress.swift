@@ -96,31 +96,31 @@ extension BitcoinAddress: Equatable {
 extension BitcoinAddress: QRCodeConvertible {}
 #endif
 
-extension BitcoinAddress {
-
-    public var bech32: String {
-        let words: Data = [0x00] + Bech32.convertTo5bit(data: data, pad: true)
-        return Bech32.encode(payload: words, prefix: network.bech32Prefix, separator: "1")
-    }
-
-    public init(bech32: String) throws {
-        guard let (prefix, hash) = Bech32.decode(bech32, separator: "1") else {
-            throw AddressError.invalid
-        }
-        guard let hashSize = HashSize(sizeInBits: hash.count * 8) else {
-            throw AddressError.invalidDataSize
-        }
-        self.data = hash
-        self.hashSize = hashSize
-        self.hashType = .scriptHash
-
-        switch prefix {
-        case "bc":
-            network = .mainnetBTC
-        case "tb":
-            network = .testnetBTC
-        default:
-            throw AddressError.invalidVersionByte
-        }
-    }
-}
+//extension BitcoinAddress {
+//
+//    public var bech32: String {
+//        let words: Data = [0x00] + Bech32.convertTo5bit(data: data, pad: true)
+//        return Bech32.encode(payload: words, prefix: network.bech32Prefix, separator: "1")
+//    }
+//
+//    public init(bech32: String) throws {
+//        guard let (prefix, hash) = Bech32.decode(bech32, separator: "1") else {
+//            throw AddressError.invalid
+//        }
+//        guard let hashSize = HashSize(sizeInBits: hash.count * 8) else {
+//            throw AddressError.invalidDataSize
+//        }
+//        self.data = hash
+//        self.hashSize = hashSize
+//        self.hashType = .scriptHash
+//
+//        switch prefix {
+//        case "bc":
+//            network = .mainnetBTC
+//        case "tb":
+//            network = .testnetBTC
+//        default:
+//            throw AddressError.invalidVersionByte
+//        }
+//    }
+//}

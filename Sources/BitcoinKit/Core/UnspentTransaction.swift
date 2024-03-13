@@ -28,19 +28,26 @@ public struct UnspentTransaction {
     public let output: TransactionOutput
     public let outpoint: TransactionOutPoint
 
-    public init(output: TransactionOutput, outpoint: TransactionOutPoint) {
+    public var tapInternalKey: Data?
+    public var redeemScript: Data?
+    public var witnessScript: Data?
+
+    public init(output: TransactionOutput, outpoint: TransactionOutPoint, redeemScript: Data? = nil, witnessScript: Data? = nil, tapInternalKey: Data? = nil) {
         self.output = output
         self.outpoint = outpoint
+        self.redeemScript = redeemScript
+        self.witnessScript = witnessScript
+        self.tapInternalKey = tapInternalKey
     }
 }
 
 extension UnspentTransaction {
     var isP2SH: Bool {
-        false
+        redeemScript != nil
     }
 
     var isP2WSH: Bool {
-        false
+        witnessScript != nil
     }
 
     var isSegwit: Bool {
@@ -48,6 +55,12 @@ extension UnspentTransaction {
     }
 
     var script: Data {
-        output.lockingScript
+        if let redeemScript = redeemScript {
+            return redeemScript
+        } else if let witnessScript = witnessScript {
+            return witnessScript
+        } else {
+            return output.lockingScript
+        }
     }
 }

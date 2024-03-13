@@ -58,6 +58,10 @@ public struct Crypto {
         return try _Crypto.signMessage(data, withPrivateKey: privateKey.data)
     }
 
+    public static func signSchnorr(_ data: Data, with privateKey: PrivateKey) throws -> Data {
+        return try _Crypto.signSchnorr(data, with: privateKey.data)
+    }
+
     public static func verifySignature(_ signature: Data, message: Data, publicKey: Data) throws -> Bool {
         return try _Crypto.verifySignature(signature, message: message, publicKey: publicKey)
     }

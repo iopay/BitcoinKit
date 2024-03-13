@@ -244,5 +244,100 @@ public class _Crypto {
         case noEnoughSpace
         case signatureParseFailed
         case publicKeyParseFailed
+
+        case badPoint
     }
+
+    public static func xOnlyPointAddTweak(_ pubKey: Data, tweak: Data) throws -> Data {
+        let ctx = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY))!
+        defer { secp256k1_context_destroy(ctx) }
+
+        var xonly_pub = secp256k1_xonly_pubkey()
+        var pub = secp256k1_pubkey()
+
+        secp256k1_xonly_pubkey_parse(
+            secp256k1_context_no_precomp,
+            &xonly_pub,
+            pubKey.bytes
+        )
+
+        secp256k1_xonly_pubkey_tweak_add(
+            ctx,
+            &pub,
+            &xonly_pub,
+            tweak.bytes
+        )
+
+        var parity: Int32 = 0
+        var key = [UInt8](repeating: 0, count: 32)
+
+        secp256k1_xonly_pubkey_from_pubkey(
+            ctx,
+            &xonly_pub,
+            &parity,
+            &pub
+        )
+
+        secp256k1_xonly_pubkey_serialize(
+            secp256k1_context_no_precomp,
+            &key,
+            &xonly_pub
+        )
+
+        return Data(bytes: &key, count: 32)
+    }
+
+    public static func privateNegate(_ pk: Data) -> Data {
+        var copy = pk.bytes
+        secp256k1_ec_seckey_negate(
+            secp256k1_context_no_precomp,
+            &copy
+        )
+
+        return Data(copy)
+    }
+
+    public static func privateAdd(_ pk: Data, tweak: Data) -> Data {
+        var copy = pk.bytes
+        secp256k1_ec_seckey_tweak_add(
+            secp256k1_context_no_precomp,
+            &copy,
+            tweak.bytes
+        )
+
+        return Data(copy)
+    }
+
+    public static func signSchnorr(_ hash: Data, with privateKey: Data, extra: Data? = nil) throws -> Data {
+        let ctx = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY))!
+        defer { secp256k1_context_destroy(ctx) }
+
+        var keypair = secp256k1_keypair()
+
+        guard secp256k1_keypair_create(
+            ctx,
+            &keypair,
+            privateKey.bytes
+        ) == 1 else {
+            throw CryptoError.signFailed
+        }
+
+        var signature = [UInt8](repeating: 0, count: 64)
+        guard secp256k1_schnorrsig_sign32(
+            ctx,
+            &signature,
+            hash.bytes,
+            &keypair,
+            extra?.bytes
+        ) == 1 else {
+            throw CryptoError.signFailed
+        }
+
+        return Data(signature)
+    }
+}
+
+struct XOnlyPointAddTweakResult {
+    let parity: UInt32
+    let xOnlyPubkey: Data
 }

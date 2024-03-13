@@ -168,3 +168,13 @@ extension PrivateKey: QRCodeConvertible {}
 public enum PrivateKeyError: Error {
     case invalidFormat
 }
+
+extension PrivateKey {
+    func tweak(_ tweak: Data) -> PrivateKey {
+        let publicKey = computePublicKeyData()
+        let hasOddY = publicKey[0] == 3 || (publicKey[0] == 4 && publicKey.count >= 64 && publicKey[64] & 1 == 1)
+        let pk = hasOddY ? _Crypto.privateNegate(data) : data
+        let tweakedPrivateKey = _Crypto.privateAdd(pk, tweak: tweak)
+        return PrivateKey(data: tweakedPrivateKey, network: network, isPublicKeyCompressed: isPublicKeyCompressed)
+    }
+}
