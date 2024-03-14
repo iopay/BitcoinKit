@@ -127,7 +127,7 @@ class Bech32Tetst: XCTestCase {
 
     func testTaproot2() throws {
         let pub = Data(hex: "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115")
-        let tp = Taproot(pubKey: pub, network: .mainnetBTC)
+        let tp = P2tr(pubKey: pub, network: .mainnetBTC)
         XCTAssertEqual(tp.address, "bc1pej9yh3jd39aam30mctm8paaghg9nsemezpk0zg3udlza0nt0cy2sqvps98")
     }
 
@@ -141,28 +141,19 @@ class Bech32Tetst: XCTestCase {
         XCTAssertEqual(tweak.hex, "35f2e1649d4a8800210a8090526c23ccb483241cff81a8e57344af8c384bbade")
 
 //        let pub2: Data = [0x51, 0x20] + tweak
-        let tp = Taproot(pubKey: tweak, network: .testnetBTC)
-        let tp2 = Taproot(internalKey: pub, network: .testnetBTC)
+        let tp = P2tr(pubKey: tweak, network: .testnetBTC)
+        let tp2 = P2tr(internalPubKey: pub, network: .testnetBTC)
         XCTAssertEqual(tp.address, "tb1pxhewzeyaf2yqqgg2szg9ymprej6gxfqul7q63etngjhccwztht0qehsm6j")
         XCTAssertEqual(tp2.address, "tb1pxhewzeyaf2yqqgg2szg9ymprej6gxfqul7q63etngjhccwztht0qehsm6j")
+
+        let p2tr = try P2tr(address: "tb1pxhewzeyaf2yqqgg2szg9ymprej6gxfqul7q63etngjhccwztht0qehsm6j")
+        XCTAssertEqual(p2tr.output, tp.output)
     }
 
     func testP2sh() throws {
         let pub = Data(hex: "0330d42b56c08f4f9a0fea1d0ac9993a47d5f81873b6d9512c25a749db49104a59")
-        var hash = Crypto.sha256ripemd160(pub)
-        print(hash.hex)
-        print(try Script().append(.OP_0).appendData(hash).data.hex)
-        hash = Crypto.sha256ripemd160([0x00, 0x14] + hash)
-        print(hash.hex)
-        let c: Data = [0x05] + hash
-//        hash = Crypto.sha256sha256(c)
-//        print(hash.hex)
-//        hash = c + hash[0..<4]
-        let reas = Base58Check.encode(c)
-        XCTAssertEqual(reas, "3LaAeyp5cu3YwZmg7w9Rs6nYVn49c5rZDH")
-
-        let nested = NestedSegwit(pubKey: pub, network: .testnetBTC)
-        XCTAssertEqual(nested.address, "2NC8Niik7EMYu9MQDo4mJV3moi8GKQkEAx3")
+        XCTAssertEqual(PublicKey(bytes: pub, network: .testnetBTC).nestedSegwit().address, "2NC8Niik7EMYu9MQDo4mJV3moi8GKQkEAx3")
+        XCTAssertEqual(PublicKey(bytes: pub, network: .testnetBTC).nativeSegwit().address, "tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg")
     }
 
     func testTweakPK() throws {
@@ -183,10 +174,16 @@ class Bech32Tetst: XCTestCase {
         let words: Data = [0x00] + Bech32.convertTo5bit(data: hash, pad: true)
         print(hash.hex)
         print(words.hex)
-        
+
         XCTAssertEqual(try P2wpkh(pubkey: pubkey, network: .testnetBTC).address, "tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg")
 
-        let bech32Deocde = Bech32.decode("tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg", separator: "1")
+        let bech32Deocde = Bech32.decode("tb1qspnn3kzcf8jshnn86hvafhtlkqjllktjugnqvg", separator: "1", const: 1)
         print(bech32Deocde!.1.hex)
+
+        XCTAssertEqual(P2tr(pubKey: pubkey, network: .testnetBTC).address, "tb1pxr2zk4kq3a8e5rl2r59vnxf6gl2lsxrnkmv4ztp95ayakjgsffvs522z2m")
+        let words2: Data = [0x01] + Bech32.convertTo5bit(data: pubkey.dropFirst(), pad: true)
+        let decode2 = Bech32m.decode(address: "tb1pxr2zk4kq3a8e5rl2r59vnxf6gl2lsxrnkmv4ztp95ayakjgsffvs522z2m")
+        print(decode2!.1.hex)
+        XCTAssertEqual(words2, decode2!.1)
     }
 }

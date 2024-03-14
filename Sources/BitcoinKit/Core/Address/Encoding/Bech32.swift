@@ -70,7 +70,7 @@ public struct Bech32 {
 //        return prefix + separator + base32
 //    }
 
-    public static func encode(payload: Data, prefix: String, separator: String = ":", const: UInt32 = 1) -> String {
+    public static func encode(payload: Data, prefix: String, separator: String = "1", const: UInt32 = 1) -> String {
         var chk = prefixChk(prefix)
         var result = prefix + separator
         for x in payload {
@@ -93,6 +93,32 @@ public struct Bech32 {
         return result
     }
 
+    public static func decode(_ string: String, separator: String = "1", const: UInt32 = 1) -> (prefix: String, data: Data)? {
+        guard !string.isEmpty, string == string.lowercased() || string == string.uppercased() else {
+            return nil
+        }
+        let components = string.components(separatedBy: separator)
+        guard components.count == 2 else {
+            return nil
+        }
+        let (prefix, base32) = (components[0], components[1].lowercased())
+        var chk = prefixChk(prefix)
+        var words: [UInt8] = []
+        for (i, c) in base32.enumerated() {
+            guard let baseIndex = base32Alphabets.firstIndex(of: c)?.utf16Offset(in: base32Alphabets) else {
+                return nil
+            }
+            chk = polymodStep(chk) ^ UInt32(baseIndex)
+            if i + 6 >= base32.count {
+                continue
+            }
+            words.append(UInt8(baseIndex))
+        }
+        guard chk == const else {
+            return nil
+        }
+        return (prefix, Data(words))
+    }
     /// Decodes the Bech32 encoded string to original payload
     ///
     /// ```
@@ -107,41 +133,41 @@ public struct Bech32 {
     /// - Parameters:
     ///   - string: The data to encode
     ///   - separator: separator that separates prefix and Base32 encoded text
-    public static func decode(_ string: String, separator: String = ":") -> (prefix: String, data: Data)? {
-        // We can't have empty string.
-        // Bech32 should be uppercase only / lowercase only.
-        guard !string.isEmpty && [string.lowercased(), string.uppercased()].contains(string) else {
-            return nil
-        }
-
-        let components = string.components(separatedBy: separator)
-        // We can only handle string contains both scheme and base32
-        guard components.count == 2 else {
-            return nil
-        }
-        let (prefix, base32) = (components[0], components[1])
-
-        var decodedIn5bit: [UInt8] = [UInt8]()
-        for c in base32.lowercased() {
-            // We can't have characters other than base32 alphabets.
-            guard let baseIndex = base32Alphabets.firstIndex(of: c)?.utf16Offset(in: base32Alphabets) else {
-                return nil
-            }
-            decodedIn5bit.append(UInt8(baseIndex))
-        }
-
-        // We can't have invalid checksum
-        let payload = Data(decodedIn5bit)
-        guard verifyChecksum(prefix: prefix, payload: payload) else {
-            return nil
-        }
-
-        // Drop checksum
-        guard let bytes = try? convertFrom5bit(data: payload.dropLast(6).dropFirst()) else {
-            return nil
-        }
-        return (prefix, Data(bytes))
-    }
+//    public static func decode(_ string: String, separator: String = ":") -> (prefix: String, data: Data)? {
+//        // We can't have empty string.
+//        // Bech32 should be uppercase only / lowercase only.
+//        guard !string.isEmpty && [string.lowercased(), string.uppercased()].contains(string) else {
+//            return nil
+//        }
+//
+//        let components = string.components(separatedBy: separator)
+//        // We can only handle string contains both scheme and base32
+//        guard components.count == 2 else {
+//            return nil
+//        }
+//        let (prefix, base32) = (components[0], components[1])
+//
+//        var decodedIn5bit: [UInt8] = [UInt8]()
+//        for c in base32.lowercased() {
+//            // We can't have characters other than base32 alphabets.
+//            guard let baseIndex = base32Alphabets.firstIndex(of: c)?.utf16Offset(in: base32Alphabets) else {
+//                return nil
+//            }
+//            decodedIn5bit.append(UInt8(baseIndex))
+//        }
+//
+//        // We can't have invalid checksum
+//        let payload = Data(decodedIn5bit)
+//        guard verifyChecksum(prefix: prefix, payload: payload) else {
+//            return nil
+//        }
+//
+//        // Drop checksum
+//        guard let bytes = try? convertFrom5bit(data: payload.dropLast(6).dropFirst()) else {
+//            return nil
+//        }
+//        return (prefix, Data(bytes))
+//    }
 
     internal static func verifyChecksum(prefix: String, payload: Data) -> Bool {
         return polymod(expand(prefix) + payload) == 1

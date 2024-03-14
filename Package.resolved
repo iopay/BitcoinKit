@@ -18,6 +18,15 @@
           "revision": "215d9675af3f8151e7ae43076afbcb765dd12601",
           "version": null
         }
+      },
+      {
+        "package": "secp256k1",
+        "repositoryURL": "https://github.com/zhangliugang/secp256k1.swift",
+        "state": {
+          "branch": "main",
+          "revision": "d4e2c9f96ba7ce16770da9cc837a1551496a1199",
+          "version": null
+        }
       }
     ]
   },

@@ -39,16 +39,16 @@ extension PublicKey {
         return try! BitcoinAddress(data: pubkeyHash, hashType: .pubkeyHash, network: network)
     }
 
-    public func taproot() -> Taproot {
-        Taproot(internalKey: data.xOnly, network: network)
+    public func taproot() -> P2tr {
+        P2tr(internalPubKey: data.xOnly, network: network)
     }
 
-    public func nestedSegwit() -> NestedSegwit {
-        NestedSegwit(pubKey: data, network: network)
+    public func nestedSegwit() -> P2sh {
+        P2sh(redeem: nativeSegwit(), network: network)
     }
 
-    public func nativeSegwit() -> NativeSegwit {
-        NativeSegwit(pubKey: data, network: network)
+    public func nativeSegwit() -> P2wpkh {
+        P2wpkh(pubkey: data, network: network)
     }
 }
 

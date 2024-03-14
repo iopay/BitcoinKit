@@ -9,7 +9,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/zhangliugang/ripemd160", .branch("master")),
 //        .package(url: "https://github.com/Boilertalk/secp256k1.swift", from: "0.1.0"),
-        .package(path: "../iotex/secp256k1"),
+        .package(url: "https://github.com/zhangliugang/secp256k1.swift", .branch("main")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", from: "1.5.1")
     ],
     targets: [

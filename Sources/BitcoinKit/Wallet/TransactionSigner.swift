@@ -72,7 +72,7 @@ public final class TransactionSigner {
             // Select key
             let utxo = unspentTransaction.output
             let txin = signedInputs[i]
-            let pubkeyHash: Data = Script.getPublicKeyHash(from: utxo.lockingScript)
+            let pubkeyHash: Data = Script.getPublicKeyHash(from: unspentTransaction.script)
 //            print(utxo.lockingScript[2...].hex)
 //            print(keys[0].publicKey().data.xOnly.hex)
             
@@ -103,37 +103,13 @@ public final class TransactionSigner {
                 }
 
                 signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: nil, witness: finalScriptWitness)
-            } else if let redeemScript = unspentTransaction.redeemScript {
-                let pubkeyHash = Script.getPublicKeyHash(from: redeemScript)
-                guard let key = keys.first(where: { $0.publicKey().pubkeyHash == pubkeyHash }) else {
-                    throw TransactionSignerError.noKeyFound
-                }
-                let sighash: Data
-                if isP2WPKH(redeemScript) {
-                    let signingScript = try! Script().append(.OP_DUP)
-                        .append(.OP_HASH160)
-                        .appendData(pubkeyHash[2...])
-                        .append(.OP_EQUALVERIFY)
-                        .append(.OP_CHECKSIG).data
-                    sighash = transaction.hashForWitnessV0(index: i, prevOutScript: signingScript, value: utxo.value, hashType: sighashHelper.hashType)
-                } else {
-                    // TODO
-                    sighash = Data()
-                }
-                let signature: Data = try Crypto.sign(sighash, privateKey: key)
-                // Create Signature Script
-                let sigWithHashType: Data = signature + [sighashHelper.hashType.uint8]
-                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: unspentTransaction, signature: sigWithHashType, pubkey: key.publicKey().data)
-
-                // Update TransactionInput
-                signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: finalScriptSig, witness: finalScriptWitness)
             } else {
                 guard let key = keys.first(where: { $0.publicKey().pubkeyHash == pubkeyHash }) else {
                     throw TransactionSignerError.noKeyFound
                 }
 
                 let sighash: Data
-                if isP2WPKH(utxo.lockingScript) {
+                if isP2WPKH(unspentTransaction.script) {
                     let signingScript = try! Script().append(.OP_DUP)
                         .append(.OP_HASH160)
                         .appendData(pubkeyHash)
@@ -146,12 +122,10 @@ public final class TransactionSigner {
                     sighash = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
                 }
                 let signature: Data = try Crypto.sign(sighash, privateKey: key)
-
-                let pubkey = key.publicKey()
                 
                 // Create Signature Script
                 let sigWithHashType: Data = signature + [sighashHelper.hashType.uint8]
-                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: unspentTransaction, signature: sigWithHashType, pubkey: pubkey.data)
+                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: unspentTransaction, signature: sigWithHashType, pubkey: key.publicKey().data)
 
                 // Update TransactionInput
                 signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: finalScriptSig, witness: finalScriptWitness)
