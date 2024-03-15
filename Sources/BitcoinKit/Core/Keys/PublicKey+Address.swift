@@ -53,13 +53,13 @@ extension PublicKey {
 }
 
 extension PublicKey {
-    var xOnly: Data {
+    public var xOnly: Data {
         data.xOnly
     }
 }
 
 extension Data {
-    var xOnly: Data {
+    public var xOnly: Data {
         toXOnly(self)
     }
 }

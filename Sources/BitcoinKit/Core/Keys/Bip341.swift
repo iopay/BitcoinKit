@@ -92,6 +92,5 @@ public func tweakKey(pubKey: Data, h: Data?) -> Data? {
         return nil
     }
     let tweakHash = tapTweakHash(pubKey: pubKey, h: h)
-//    fatalError()
     return try? _Crypto.xOnlyPointAddTweak(pubKey, tweak: tweakHash)
 }
