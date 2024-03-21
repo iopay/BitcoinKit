@@ -335,6 +335,20 @@ public class _Crypto {
 
         return Data(signature)
     }
+
+    public static func signMessage2(_ data: Data, key: Data) -> (Data, Int32) {
+        let ctx = secp256k1_context_create(UInt32(SECP256K1_CONTEXT_SIGN))!
+        defer { secp256k1_context_destroy(ctx) }
+
+        var sig = secp256k1_ecdsa_recoverable_signature()
+        secp256k1_ecdsa_sign_recoverable(ctx, &sig, data.bytes, key.bytes, secp256k1_nonce_function_rfc6979, nil)
+
+        var output = [UInt8](repeating: 0, count: 64)
+        var recid: Int32 = 0
+        secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, &output, &recid, &sig)
+
+        return (Data(output), recid)
+    }
 }
 
 struct XOnlyPointAddTweakResult {

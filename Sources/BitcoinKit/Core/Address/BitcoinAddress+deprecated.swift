@@ -24,12 +24,12 @@
 
 import Foundation
 
-extension BitcoinAddress: Address {
-    @available(*, deprecated, renamed: "legacy")
-    public var base58: String { return legacy }
-
-    @available(*, unavailable, message: "Use init(cashaddr:) or init(legacy:) instead.")
-    public init(_ string: String) {
-        fatalError("init(_:) is not supported anymore. Please use init(cashaddr:) or init(legacy:) instead.")
-    }
-}
+//extension BitcoinAddress: Address {
+//    @available(*, deprecated, renamed: "legacy")
+//    public var base58: String { return legacy }
+//
+//    @available(*, unavailable, message: "Use init(cashaddr:) or init(legacy:) instead.")
+//    public init(_ string: String) {
+//        fatalError("init(_:) is not supported anymore. Please use init(cashaddr:) or init(legacy:) instead.")
+//    }
+//}

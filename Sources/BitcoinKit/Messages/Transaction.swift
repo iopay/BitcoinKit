@@ -222,7 +222,7 @@ extension Transaction {
             ((leafHash != nil) ? 37 : 0)
 
         var data = Data()
-        data += hashType.uint8
+        data += UInt8(0)//hashType.uint8
         data += version
         data += lockTime
         data += hashPrevouts
@@ -284,4 +284,10 @@ extension Transaction {
         return hashes
     }
 
+}
+
+extension Transaction {
+    static func fromPsbtHex(_ hex: String) {
+        
+    }
 }

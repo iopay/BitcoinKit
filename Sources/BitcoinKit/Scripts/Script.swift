@@ -97,28 +97,29 @@ public class Script {
 
     public convenience init?(address: Address) {
         self.init()
-        switch address.hashType {
-        case .pubkeyHash:
-            // OP_DUP OP_HASH160 <hash> OP_EQUALVERIFY OP_CHECKSIG
-            do {
-                try self.append(.OP_DUP)
-                    .append(.OP_HASH160)
-                    .appendData(address.data)
-                    .append(.OP_EQUALVERIFY)
-                    .append(.OP_CHECKSIG)
-            } catch {
-                return nil
-            }
-        case .scriptHash:
-            // OP_HASH160 <hash> OP_EQUAL
-            do {
-                try self.append(.OP_HASH160)
-                    .appendData(address.data)
-                    .append(.OP_EQUAL)
-            } catch {
-                return nil
-            }
-        }
+        try? self.update(with: address.script)
+//        switch address.hashType {
+//        case .pubkeyHash:
+//            // OP_DUP OP_HASH160 <hash> OP_EQUALVERIFY OP_CHECKSIG
+//            do {
+//                try self.append(.OP_DUP)
+//                    .append(.OP_HASH160)
+//                    .appendData(address.data)
+//                    .append(.OP_EQUALVERIFY)
+//                    .append(.OP_CHECKSIG)
+//            } catch {
+//                return nil
+//            }
+//        case .scriptHash:
+//            // OP_HASH160 <hash> OP_EQUAL
+//            do {
+//                try self.append(.OP_HASH160)
+//                    .appendData(address.data)
+//                    .append(.OP_EQUAL)
+//            } catch {
+//                return nil
+//            }
+//        }
     }
 
     // OP_<M> <pubkey1> ... <pubkeyN> OP_<N> OP_CHECKMULTISIG

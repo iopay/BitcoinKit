@@ -1,18 +1,27 @@
 import Foundation
 
-public protocol AddressType {
+public enum AddressType {
+    case P2PKH
+    case P2WPKH
+    case P2SHP2WPKH
+    case P2WSH
+    case P2TR
+}
+
+public protocol Address {
     var address: String { get }
     var network: Network { get }
     var script: Data { get }
+    var type: AddressType { get }
 }
 
-public extension AddressType where Self: PaymentType {
+public extension Address where Self: PaymentType {
     var script: Data {
         output
     }
 }
 
-public func createAddressFromString(_ address: String) throws -> AddressType {
+public func createAddressFromString(_ address: String) throws -> Address {
     if let base58 = Base58Check.decode(address) {
         guard base58.count == 21 else {
             throw PaymentError.addressInvalid

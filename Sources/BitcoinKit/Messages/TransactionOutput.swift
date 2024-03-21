@@ -47,7 +47,7 @@ public struct TransactionOutput {
         self.lockingScript = lockingScript
     }
 
-    public init(value: UInt64, address: AddressType) {
+    public init(value: UInt64, address: Address) {
         self.value = value
         self.lockingScript = address.script
     }

@@ -396,7 +396,7 @@ public class SQLiteBlockStore: BlockStore {
 
     public func calculateBalance(address: Address) throws -> Int64 {
         let stmt = statements["calculateBalance"]
-        try execute { sqlite3_bind_text(stmt, 1, address.legacy, -1, SQLITE_TRANSIENT) }
+        try execute { sqlite3_bind_text(stmt, 1, address.address, -1, SQLITE_TRANSIENT) }
 
         var balance: Int64 = 0
         while sqlite3_step(stmt) == SQLITE_ROW {
@@ -411,7 +411,7 @@ public class SQLiteBlockStore: BlockStore {
 
     public func transactions(address: Address) throws -> [Payment] {
         let stmt = statements["transactions"]
-        try execute { sqlite3_bind_text(stmt, 1, address.legacy, -1, SQLITE_TRANSIENT) }
+        try execute { sqlite3_bind_text(stmt, 1, address.address, -1, SQLITE_TRANSIENT) }
 
         var payments = [Payment]()
         while sqlite3_step(stmt) == SQLITE_ROW {
@@ -423,8 +423,8 @@ public class SQLiteBlockStore: BlockStore {
                 Payment(state: .received,
                         index: index,
                         amount: value,
-                        from: try! BitcoinAddress(legacy: String(cString: address)),
-                        to: try! BitcoinAddress(legacy: String(cString: address)),
+                        from: try! createAddressFromString(String(cString: address)),
+                        to: try! createAddressFromString(String(cString: address)),
                         txid: Data(bytes: txid!, count: 32)
                 )
             )
@@ -437,7 +437,7 @@ public class SQLiteBlockStore: BlockStore {
 
     public func unspentTransactions(address: Address) throws -> [Payment] {
         let stmt = statements["unspentTransactions"]
-        try execute { sqlite3_bind_text(stmt, 1, address.legacy, -1, SQLITE_TRANSIENT) }
+        try execute { sqlite3_bind_text(stmt, 1, address.address, -1, SQLITE_TRANSIENT) }
 
         var payments = [Payment]()
         while sqlite3_step(stmt) == SQLITE_ROW {
@@ -450,8 +450,8 @@ public class SQLiteBlockStore: BlockStore {
                     state: .received,
                     index: index,
                     amount: value,
-                    from: try! BitcoinAddress(legacy: String(cString: address)),
-                    to: try! BitcoinAddress(legacy: String(cString: address)),
+                    from: try! createAddressFromString(String(cString: address)),
+                    to: try! createAddressFromString(String(cString: address)),
                     txid: Data(bytes: txid!, count: 32)
                 )
             )

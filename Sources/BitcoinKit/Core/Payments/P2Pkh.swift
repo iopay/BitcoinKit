@@ -1,11 +1,12 @@
 import Foundation
 
 /// p2pkh(legacy address)
-public struct P2pkh: PaymentType, AddressType {
+public struct P2pkh: PaymentType, Address {
     public let output: Data
     public let hash: Data
     public let address: String
     public let network: Network
+    public let type: AddressType = .P2PKH
 
     public init(output: Data, network: Network = .mainnetBTC) throws {
         self.output = output

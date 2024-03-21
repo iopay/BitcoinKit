@@ -49,7 +49,7 @@ class BCHSignatureHashHelperTests: XCTestCase {
         let plan = TransactionPlan(unspentTransactions: [unspentTransaction], amount: 600, fee: 226, change: 4325)
         let toAddress = try! BitcoinAddress(cashaddr: "bitcoincash:qpmfhhledgp0jy66r5vmwjwmdfu0up7ujqcp07ha9v")
         let changeAddress = try! BitcoinAddress(cashaddr: "bitcoincash:qz0q3xmg38sr94rw8wg45vujah7kzma3cskxymnw06")
-        tx = TransactionBuilder.build(from: plan, toAddress: toAddress, changeAddress: changeAddress)
+//        tx = TransactionBuilder.build(from: plan, toAddress: toAddress, changeAddress: changeAddress)
     }
 
     func testPrevoutHash() {

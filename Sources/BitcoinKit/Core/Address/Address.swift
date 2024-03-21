@@ -24,10 +24,10 @@
 
 import Foundation
 
-public protocol Address: CustomStringConvertible {
-    var network: Network { get }
-    var hashType: BitcoinAddress.HashType { get }
-    var data: Data { get }
-    var legacy: String { get }
-    var cashaddr: String { get }
-}
+//public protocol Address: CustomStringConvertible {
+//    var network: Network { get }
+//    var hashType: BitcoinAddress.HashType { get }
+//    var data: Data { get }
+//    var legacy: String { get }
+//    var cashaddr: String { get }
+//}

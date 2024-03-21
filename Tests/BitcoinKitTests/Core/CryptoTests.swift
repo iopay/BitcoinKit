@@ -82,4 +82,24 @@ class CryptoTests: XCTestCase {
             extra: Data(hex: "0000000000000000000000000000000000000000000000000000000000000000")
         ).hex, "e907831f80848d1069a5371b402410364bdf1c5f8307b0084c55f1ce2dca821525f66a4a85ea8b71e482a74f382d2ce5ebeee8fdb2172f477df4900d310536c0")
     }
+
+    func testBip0322Hash() {
+        XCTAssertEqual(Crypto.bip0322Hash("message").hex, "8ca090fa05878a38a0831da888481c1f3845462cc234be4ebc47541b45421ac1")
+        XCTAssertEqual(Crypto.bip0322Hash("").hex, "c90c269c4f8fcbe6880f72a721ddfbf1914268a794cbb21cfafee13770ae19f1")
+        XCTAssertEqual(Crypto.bip0322Hash("Hello World").hex, "f0eb03b1a75ac6d9847f55c624a99169b5dccba2a31f5b23bea77ba270de0a7a")
+    }
+
+    func testSignMessageOfBIP322Simple() throws {
+        let key = try PrivateKey(wif: "cW62cANWa6wXmGPvLMUziJY9Y92apyqRcoopqLfdbaBQw58UMziF")
+        let signed = try Crypto.signMessageOfBIP322Simple("hello world~", address: "tb1pq0atv5mzazx5gv6a9mvhn3ephgc3m2sp3qgsedtzvamzehh6txnqhf2xl9", network: .testnetBTC, privateKey: key)
+        XCTAssertEqual(signed, "AUB7TMvppOpNXMOdGN8CXtyRTR9A/DJqbCoWj9epwHNJBxCDN9EWdfs/76zRvqfV7bjM1HIk7UutmMW13vvfZ3+F")
+    }
+
+    func testSignMessageOfBIP322Simple2() throws {
+//        let s1 = try Crypto.signMessageOfBIP322Simple("", address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l", network: .mainnetBCH, privateKey: PrivateKey(wif: "L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k"))
+//        XCTAssertEqual(s1, "AkcwRAIgM2gBAQqvZX15ZiysmKmQpDrG83avLIT492QBzLnQIxYCIBaTpOaD20qRlEylyxFSeEA2ba9YOixpX8z46TSDtS40ASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=")
+//        
+//        let s2 = try Crypto.signMessageOfBIP322Simple("Hello World", address: "bc1q9vza2e8x573nczrlzms0wvx3gsqjx7vavgkx0l", network: .mainnetBCH, privateKey: PrivateKey(wif: "L3VFeEujGtevx9w18HD1fhRbCH67Az2dpCymeRE1SoPK6XQtaN2k"))
+//        XCTAssertEqual(s2, "AkcwRAIgZRfIY3p7/DoVTty6YZbWS71bc5Vct9p9Fia83eRmw2QCICK/ENGfwLtptFluMGs2KsqoNSk89pO7F29zJLUx9a/sASECx/EgAxlkQpQ9hYjgGu6EBCPMVPwVIVJqO4XCsMvViHI=")
+    }
 }

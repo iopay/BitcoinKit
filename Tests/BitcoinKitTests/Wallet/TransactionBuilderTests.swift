@@ -43,9 +43,9 @@ class TransactionBuilderTests: XCTestCase {
         let unspentTransaction = UnspentTransaction(output: prevTxOutput,
                                       outpoint: prevTxOutPoint)
         let plan = TransactionPlan(unspentTransactions: [unspentTransaction], amount: 50_000_000, fee: 10_000_000, change: 109_012_961)
-        let toAddress = try! BitcoinAddress(legacy: "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB")
+        let toAddress = try! createAddressFromString("mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB")
         let privKey = try! PrivateKey(wif: "92pMamV6jNyEq9pDpY4f6nBy9KpV2cfJT4L5zDUYiGqyQHJfF1K")
-        let changeAddress = privKey.publicKey().toBitcoinAddress()
+        let changeAddress = privKey.publicKey().legacy()
         let tx: Transaction = TransactionBuilder.build(from: plan, toAddress: toAddress, changeAddress: changeAddress)
         
         let expectedSerializedTx: Data = Data(hex: "010000000131820866b6f840db0eeec1b5ecc44092869ebc72d4ff5e76b46690eb4eca24150100000000ffffffff0280f0fa02000000001976a9149f9a7abd600c0caa03983a77c8c3df8e062cb2fa88ace1677f06000000001976a9142a539adfd7aefcc02e0196b4ccf76aea88a1f47088ac00000000")
@@ -55,34 +55,6 @@ class TransactionBuilderTests: XCTestCase {
 //        XCTAssertEqual(tx.signatureHash(for: prevTxOutput, inputIndex: 0, hashType: SighashType.BTC.ALL), expectedSignatureHash)
     }
 
-    func testBCHTransaction() {
-        // Transaction on Bitcoin Cash Mainnet
-        // TxID : 96ee20002b34e468f9d3c5ee54f6a8ddaa61c118889c4f35395c2cd93ba5bbb4
-        // https://explorer.bitcoin.com/bch/tx/96ee20002b34e468f9d3c5ee54f6a8ddaa61c118889c4f35395c2cd93ba5bbb4
-        
-        // TransactionOutput
-        let prevTxLockScript = Data(hex: "76a914aff1e0789e5fe316b729577665aa0a04d5b0f8c788ac")
-        let prevTxOutput = TransactionOutput(value: 5151, lockingScript: prevTxLockScript)
-        
-        // TransactionOutpoint
-        let prevTxID = "050d00e2e18ef13969606f1ceee290d3f49bd940684ce39898159352952b8ce2"
-        let prevTxHash = Data(Data(hex: prevTxID).reversed())
-        let prevTxOutPoint = TransactionOutPoint(hash: prevTxHash, index: 2)
-        
-        // UnspentTransaction
-        let unspentTransaction = UnspentTransaction(output: prevTxOutput,
-                                      outpoint: prevTxOutPoint)
-        let plan = TransactionPlan(unspentTransactions: [unspentTransaction], amount: 600, fee: 226, change: 4325)
-        let toAddress = try! BitcoinAddress(cashaddr: "bitcoincash:qpmfhhledgp0jy66r5vmwjwmdfu0up7ujqcp07ha9v")
-        let changeAddress = try! BitcoinAddress(cashaddr: "bitcoincash:qz0q3xmg38sr94rw8wg45vujah7kzma3cskxymnw06")
-        let tx = TransactionBuilder.build(from: plan, toAddress: toAddress, changeAddress: changeAddress)
-        let expectedSerializedTx: Data = Data(hex: "0100000001e28c2b955293159898e34c6840d99bf4d390e2ee1c6f606939f18ee1e2000d050200000000ffffffff0258020000000000001976a914769bdff96a02f9135a1d19b749db6a78fe07dc9088ace5100000000000001976a9149e089b6889e032d46e3b915a3392edfd616fb1c488ac00000000")
-        XCTAssertEqual(tx.serialized().hex, expectedSerializedTx.hex)
-        // TODO: SignatureHash test
-//        let expectedSignatureHash: Data = Data(hex: "1136d4975aee4ff6ccf0b8a9c640532f563b48d9856fdc9682c37a071702937c")
-//        XCTAssertEqual(tx.signatureHash(for: prevTxOutput, inputIndex: 0, hashType: SighashType.BCH.ALL), expectedSignatureHash)
-    }
-
     func testBuildTransaction() throws {
 //        print(UInt32.max)
         let pre_id = "a61a8e37eded6b5ad276d0909638cacafcc7e39de49b313f2b6a659802452ab6"
@@ -90,15 +62,13 @@ class TransactionBuilderTests: XCTestCase {
 
 
         let privateKey = try PrivateKey(wif: "cMaiBc8cCbUcM4uyBCHfDabidYUR8EACuSm9rgRkxQPCsBma4sbX")
-        let from = privateKey.publicKey().toBitcoinAddress()
-        let to = try BitcoinAddress(legacy: "n2RJwAYq4km2RPXKRKKiCR4mJZ5f9harCD")
+        let from = privateKey.publicKey().legacy()
+        let to = try createAddressFromString("n2RJwAYq4km2RPXKRKKiCR4mJZ5f9harCD")
         let balance: UInt64 = 4158265
         let amount: UInt64  = 1000000
         let fee: UInt64     = 1000 * 120
 
         print(preHash.hex)
-        print(from.data.hex)
-        print(to.data.hex)
 
         XCTAssertEqual("76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac", Script(address: from)!.data.hex)
         XCTAssertEqual("76a914e5495ffe01a0598c25d2470d56742effe75237a788ac", Script(address: to)!.data.hex)

@@ -1,11 +1,12 @@
 import Foundation
 
 /// p2wpkh(native segwit address)
-public struct P2wpkh: PaymentType, AddressType {
+public struct P2wpkh: PaymentType, Address {
     public var output: Data
     public let hash: Data
     public var address: String
     public var network: Network
+    public let type: AddressType = .P2WPKH
 
     public init(pubkey: Data, network: Network = .mainnetBTC) {
         self.network = network

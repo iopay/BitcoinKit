@@ -85,7 +85,7 @@ public final class TransactionSigner {
                 let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
                     .map { hash, _ in
                         let signature = try Crypto.signSchnorr(hash, with: key)
-                        return serializeTaprootSignature(sig: signature, sighashType: 1)
+                        return serializeTaprootSignature(sig: signature, sighashType: nil)
                     }.first
                 let tapScriptSig = try hashesForSig.filter { $0.leafHash != nil }
                     .map { hash, leafHash in
@@ -115,10 +115,11 @@ public final class TransactionSigner {
                         .appendData(pubkeyHash)
                         .append(.OP_EQUALVERIFY)
                         .append(.OP_CHECKSIG).data
+                    /// p2sh-p2wpkh, p2wpkh
                     sighash = transaction.hashForWitnessV0(index: i, prevOutScript: signingScript, value: utxo.value, hashType: sighashHelper.hashType)
                 } else {
 
-                    // Sign transaction hash
+                    // Sign transaction hash, p2pkh
                     sighash = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
                 }
                 let signature: Data = try Crypto.sign(sighash, privateKey: key)

@@ -42,8 +42,8 @@ public struct MockHelper {
     }
 
     public static func createTransaction(unspentTransaction: UnspentTransaction) -> Transaction {
-        let toAddress: BitcoinAddress = try! BitcoinAddress(legacy: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")
-        let changeAddress: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
+        let toAddress = try! createAddressFromString("1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")//: BitcoinAddress = try! BitcoinAddress(legacy: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")
+        let changeAddress = try! createAddressFromString("1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")//: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
         // 1. inputs
         let unsignedInputs = [TransactionInput(previousOutput: unspentTransaction.outpoint,
                                                sequence: UInt32.max)]
@@ -55,12 +55,12 @@ public struct MockHelper {
         let change: UInt64 = unspentTransaction.output.value - amount - fee
 
         // 2-2. Script
-        let lockingScriptTo = Script(address: toAddress)!
-        let lockingScriptChange = Script(address: changeAddress)!
+//        let lockingScriptTo = Script(address: toAddress)!
+//        let lockingScriptChange = Script(address: changeAddress)!
 
         // 2-3. TransactionOutput
-        let toOutput = TransactionOutput(value: amount, lockingScript: lockingScriptTo.data)
-        let changeOutput = TransactionOutput(value: change, lockingScript: lockingScriptChange.data)
+        let toOutput = TransactionOutput(value: amount, lockingScript: toAddress.script)
+        let changeOutput = TransactionOutput(value: change, lockingScript: changeAddress.script)
 
         // 3. Tx
         let tx = Transaction(version: 1, inputs: unsignedInputs, outputs: [toOutput, changeOutput], lockTime: 0)

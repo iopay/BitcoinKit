@@ -1,11 +1,12 @@
 import Foundation
 
 /// p2sh-p2wpkh (nested segwit address)
-public struct P2sh: PaymentType, AddressType {
+public struct P2sh: PaymentType, Address {
     public let output: Data
     public let hash: Data
     public let address: String
     public let network: Network
+    public let type: AddressType = .P2SHP2WPKH
 
     public init(redeem: PaymentType, network: Network = .mainnetBTC) {
         self.network = network

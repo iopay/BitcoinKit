@@ -38,12 +38,12 @@ public struct TransactionBuilder {
     ///   - changeAddress: Address to receive the change
     /// - Returns: The transaction whose inputs are not signed.
     public static func build(from plan: TransactionPlan, toAddress: Address, changeAddress: Address) -> Transaction {
-        let toLockScript: Data = Script(address: toAddress)!.data
+        let toLockScript: Data = toAddress.script
         var outputs: [TransactionOutput] = [
             TransactionOutput(value: plan.amount, lockingScript: toLockScript)
         ]
         if plan.change > 0 {
-            let changeLockScript: Data = Script(address: changeAddress)!.data
+            let changeLockScript: Data = changeAddress.script
             outputs.append(
                 TransactionOutput(value: plan.change, lockingScript: changeLockScript)
             )

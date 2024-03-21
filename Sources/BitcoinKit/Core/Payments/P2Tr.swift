@@ -1,11 +1,12 @@
 import Foundation
 
 /// p2tr (taproot address)
-public struct P2tr: PaymentType, AddressType {
+public struct P2tr: PaymentType, Address {
     public var output: Data
 //    public let hash: Data
     public var address: String
     public var network: Network
+    public let type: AddressType = .P2TR
 
     public init(pubKey: Data, network: Network = .mainnetBTC) {
 //        self.hash = hash

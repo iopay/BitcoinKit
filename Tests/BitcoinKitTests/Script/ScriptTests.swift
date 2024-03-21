@@ -56,7 +56,7 @@ class ScriptTests: XCTestCase {
         let script = Script(data: Data(hex: "76a9147ab89f9fae3f8043dcee5f7b5467a0f0a6e2f7e188ac"))!
         XCTAssertTrue(script.isPayToPublicKeyHashScript, "should be regular hash160 script")
         
-        let address = try! BitcoinAddress(legacy: "1CBtcGivXmHQ8ZqdPgeMfcpQNJrqTrSAcG")
+        let address = try! createAddressFromString("1CBtcGivXmHQ8ZqdPgeMfcpQNJrqTrSAcG")
         let script2 = Script(address: address)
         XCTAssertEqual(script2!.data, script.data, "script created from extracted address should be the same as the original script")
         XCTAssertEqual(script2!.string, script.string, "script created from extracted address should be the same as the original script")

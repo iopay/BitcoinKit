@@ -23,16 +23,16 @@
 //
 
 import Foundation
-
-@available(*, deprecated, message: "AddressFactory will be removed in ver. 2.0.0. Use BitcoinAddress.init(legacy:) or BitcoinAddress.init(cashaddr:) instead.")
-public struct AddressFactory {
-    public static func create(_ plainAddress: String) throws -> Address {
-        do {
-            return try BitcoinAddress(cashaddr: plainAddress)
-        } catch AddressError.invalid {
-            return try BitcoinAddress(legacy: plainAddress)
-        } catch let e {
-            throw e
-        }
-    }
-}
+//
+//@available(*, deprecated, message: "AddressFactory will be removed in ver. 2.0.0. Use BitcoinAddress.init(legacy:) or BitcoinAddress.init(cashaddr:) instead.")
+//public struct AddressFactory {
+//    public static func create(_ plainAddress: String) throws -> Address {
+//        do {
+//            return try BitcoinAddress(cashaddr: plainAddress)
+//        } catch AddressError.invalid {
+//            return try BitcoinAddress(legacy: plainAddress)
+//        } catch let e {
+//            throw e
+//        }
+//    }
+//}

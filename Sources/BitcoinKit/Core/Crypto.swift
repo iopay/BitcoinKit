@@ -86,6 +86,68 @@ public struct Crypto {
 
         return try Crypto.verifySignature(signature, message: sighash, publicKey: pubKeyData)
     }
+
+    public static func magicHash(message: String, prefix: String = "Bitcoin Signed Message:\n") -> Data {
+        let messageBuffer = message.data(using: .utf8)!
+        let prefixBuffer = prefix.data(using: .utf8)!
+        let p1 = VarInt(prefixBuffer.count)
+        let p2 = VarInt(messageBuffer.count)
+        return (p1.serialized() + prefixBuffer + p2.serialized() + messageBuffer).sha256().sha256()
+    }
+
+    public static func signMessage(_ msg: String, privateKey: PrivateKey) -> String {
+        let hash = magicHash(message: msg)
+        let (signature, i) = _Crypto.signMessage2(hash, key: privateKey.data)
+        return ([UInt8(i + 27 + 4)] + signature).toBase64()
+    }
+
+    static func bip0322Hash(_ message: String) -> Data {
+        let tag = "BIP0322-signed-message"
+        let tagHash = tag.data(using: .utf8)!.sha256()
+        return (tagHash + tagHash + message.data(using: .utf8)!).sha256()
+    }
+
+    public static func signMessageOfBIP322Simple(_ message: String, address: String, network: Network, privateKey: PrivateKey) throws -> String {
+        let address = try createAddressFromString(address)
+        if ![AddressType.P2WPKH, AddressType.P2TR].contains(address.type) {
+            throw CryptoError.notSupportedAddress
+        }
+        let outputScript = address.script
+        let xOnlyPubKey = privateKey.publicKey().xOnly
+
+        let preHash = Data(hex: "0000000000000000000000000000000000000000000000000000000000000000")
+        let scriptSig: Data = [0x00, 0x20] + bip0322Hash(message)
+        let txToSpend = Transaction(version: 0, inputs: [
+            .init(previousOutput: .init(hash: preHash, index: 0xffffffff), sequence: 0, signatureScript: scriptSig)
+        ], outputs: [
+            .init(value: 0, lockingScript: outputScript)
+        ], lockTime: 0)
+        let txToSpendHash = txToSpend.serialized().sha256().sha256()
+
+        print("message: \(message), \(txToSpendHash.hex)")
+
+        let txToSign = Transaction(version: 0, inputs: [
+            .init(previousOutput: .init(hash: txToSpendHash, index: 0), sequence: 0)
+        ], outputs: [
+            .init(value: 0, lockingScript: Data([0x6a]))
+        ], lockTime: 0)
+        var unspent = UnspentTransaction(output: .init(value: 0, lockingScript: outputScript), outpoint: .init(hash: txToSpendHash, index: 0))
+        if address.type == .P2TR {
+            unspent.tapInternalKey = xOnlyPubKey
+        }
+
+        let signer = TransactionSigner(unspentTransactions: [unspent], transaction: txToSign, sighashHelper: BTCSignatureHashHelper(hashType: .ALL))
+        let key = if address.type == .P2TR {
+            privateKey.tweak(taggedHash(.TapTweak, data: xOnlyPubKey))
+        } else {
+            privateKey
+        }
+        let signedTx = try signer.sign(with: [key])
+
+        let length = VarInt(signedTx.inputs[0].witness.count)
+        let res = signedTx.inputs[0].witness.map { VarInt($0.count).data + $0 }.reduce(length.data, { $0 + $1 })
+        return res.base64EncodedString()
+    }
 }
 
 public enum CryptoError: Error {
@@ -93,4 +155,5 @@ public enum CryptoError: Error {
     case noEnoughSpace
     case signatureParseFailed
     case publicKeyParseFailed
+    case notSupportedAddress
 }

@@ -58,9 +58,9 @@ open class HDWallet {
     public private(set) var internalIndex: UInt32
 
     /// [Cached] Latest Address for receiving payment.
-    public var address: BitcoinAddress { return externalAddresses.last! }
+    public var address: Address { return externalAddresses.last! }
     /// [Cached] Latest Address for change output.
-    public var changeAddress: BitcoinAddress { return internalAddresses.last! }
+    public var changeAddress: Address { return internalAddresses.last! }
 
     // MARK: - Private Keys
     /// [Secret] [Cached] Private keys for external addresses (receive).
@@ -80,11 +80,11 @@ open class HDWallet {
 
     // MARK: - Addresses
     /// [Cached] External addresses for receiving payment.
-    public private(set) var externalAddresses: [BitcoinAddress]!
+    public private(set) var externalAddresses: [Address]!
     /// [Cached] Internal addresses for change output.
-    public private(set) var internalAddresses: [BitcoinAddress]!
+    public private(set) var internalAddresses: [Address]!
     /// [Cached] Addresses combined both external and internal.
-    public var addresses: [BitcoinAddress] { return externalAddresses + internalAddresses }
+    public var addresses: [Address] { return externalAddresses + internalAddresses }
 
     private func initializeCache() {
         // Privkey cache
@@ -96,8 +96,8 @@ open class HDWallet {
         self.internalPubKeys = internalPrivKeys.map { $0.publicKey() }
 
         // Address cache
-        self.externalAddresses = externalPubKeys.map { $0.toBitcoinAddress() }
-        self.internalAddresses = internalPubKeys.map { $0.toBitcoinAddress() }
+        self.externalAddresses = externalPubKeys.map { $0.legacy() }
+        self.internalAddresses = internalPubKeys.map { $0.legacy() }
     }
 
     public init(seed: Data,
@@ -173,8 +173,8 @@ open class HDWallet {
     }
 
     /// [Non-Cache] Get address for index
-    public func address(index: UInt32, chain: Chain) -> BitcoinAddress {
-        return pubKey(index: index, chain: chain).toBitcoinAddress()
+    public func address(index: UInt32, chain: Chain) -> Address {
+        return pubKey(index: index, chain: chain).legacy()
     }
 
     /// Increment external index and update privkey/pubkey/address cache.
@@ -182,7 +182,7 @@ open class HDWallet {
         let newIndex: UInt32 = externalIndex + value
         let newPrivKeys: [PrivateKey] = (externalIndex + 1...newIndex).map { privKey(index: $0, chain: .external) }
         let newPubKeys: [PublicKey] = newPrivKeys.map { $0.publicKey() }
-        let newAddresses: [BitcoinAddress] = newPubKeys.map { $0.toBitcoinAddress() }
+        let newAddresses: [Address] = newPubKeys.map { $0.legacy() }
         externalIndex += value
         externalPrivKeys += newPrivKeys
         externalPubKeys += newPubKeys
@@ -194,7 +194,7 @@ open class HDWallet {
         let newIndex: UInt32 = internalIndex + value
         let newPrivKeys: [PrivateKey] = (internalIndex + 1...newIndex).map { privKey(index: $0, chain: .internal) }
         let newPubKeys: [PublicKey] = newPrivKeys.map { $0.publicKey() }
-        let newAddresses: [BitcoinAddress] = newPubKeys.map { $0.toBitcoinAddress() }
+        let newAddresses: [Address] = newPubKeys.map { $0.legacy() }
         internalIndex += value
         internalPrivKeys += newPrivKeys
         internalPubKeys += newPubKeys
@@ -217,17 +217,17 @@ open class HDWallet {
         return 0
     }
 
-    // MARK: - Deprecated methods
-    // External Addresses & Keys (Receive Addresses & Keys)
-    @available(*, unavailable, renamed: "address")
-    public func receiveAddress() throws -> Address {
-        return address(index: externalIndex, chain: .external)
-    }
-
-    @available(*, unavailable, message: "Use address(_ index: UInt32, chain: Chain) instead")
-    public func receiveAddress(index: UInt32) throws -> Address {
-        return address(index: index, chain: .external)
-    }
+//    // MARK: - Deprecated methods
+//    // External Addresses & Keys (Receive Addresses & Keys)
+//    @available(*, unavailable, renamed: "address")
+//    public func receiveAddress() throws -> Address {
+//        return address(index: externalIndex, chain: .external)
+//    }
+//
+//    @available(*, unavailable, message: "Use address(_ index: UInt32, chain: Chain) instead")
+//    public func receiveAddress(index: UInt32) throws -> Address {
+//        return address(index: index, chain: .external)
+//    }
 
     @available(*, unavailable, renamed: "pubKey")
     public func publicKey(index: UInt32) throws -> PublicKey {
@@ -249,11 +249,11 @@ open class HDWallet {
         return xprivKey(index: index, chain: .external)
     }
 
-    // MARK: - Internal Addresses & Keys (Change Addresses& Keys)
-    @available(*, unavailable, message: "Use address(_ index: UInt32, chain: Chain) instead")
-    public func changeAddress(index: UInt32) throws -> Address {
-        return address(index: index, chain: .internal)
-    }
+//    // MARK: - Internal Addresses & Keys (Change Addresses& Keys)
+//    @available(*, unavailable, message: "Use address(_ index: UInt32, chain: Chain) instead")
+//    public func changeAddress(index: UInt32) throws -> Address {
+//        return address(index: index, chain: .internal)
+//    }
 
     @available(*, unavailable, renamed: "pubKey")
     public func changePublicKey(index: UInt32) throws -> PublicKey {

@@ -26,27 +26,24 @@ import Foundation
 
 extension PublicKey {
     @available(*, deprecated, message: "toLegacy() will be removed. Use toBitcoinAddress instead.")
-    public func toLegacy() -> LegacyAddress {
-        return toBitcoinAddress()
+    public func toLegacy() -> Address {
+        legacy()
     }
 
-    @available(*, deprecated, message: "toCashaddr() will be removed. Use toBitcoinAddress instead.")
-    public func toCashaddr() -> Cashaddr {
-        return toBitcoinAddress()
-    }
-
-    public func toBitcoinAddress() -> BitcoinAddress {
-        return try! BitcoinAddress(data: pubkeyHash, hashType: .pubkeyHash, network: network)
+    public func legacy() -> P2pkh {
+        P2pkh(pubkey: data, network: network)
     }
 
     public func taproot() -> P2tr {
         P2tr(internalPubKey: data.xOnly, network: network)
     }
 
+    /// p2sh-p2wph
     public func nestedSegwit() -> P2sh {
         P2sh(redeem: nativeSegwit(), network: network)
     }
 
+    /// p2wpkh
     public func nativeSegwit() -> P2wpkh {
         P2wpkh(pubkey: data, network: network)
     }

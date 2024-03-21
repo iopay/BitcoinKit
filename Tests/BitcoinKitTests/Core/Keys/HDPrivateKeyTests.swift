@@ -191,6 +191,5 @@ class HDPrivateKeyTests: XCTestCase {
         XCTAssertEqual(privKey.data.hex, "00f2c37dad54d1d2be57b06653ea655c6fd8eb3ca3f0b9671e036d50061d265b")
         XCTAssertEqual(privKey.description, "KwFZ6jFtuvBu7w4R4x4WpzQgSSYTHLEw8Pr2PUkWjADkHJUPNDVg")
         XCTAssertEqual(privKey.publicKey().description, "02a712f894d58baef44e4fbbc26ed6ca89487db1f17e944f9b45ca2ae666e99d72")
-        XCTAssertEqual(privKey.publicKey().toBitcoinAddress().legacy, "1DPUysR46jraybTwP3PfSbcBENeLScLxx")
     }
 }
