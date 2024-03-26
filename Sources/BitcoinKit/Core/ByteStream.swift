@@ -27,7 +27,7 @@ import Foundation
 
 class ByteStream {
     let data: Data
-    private var offset = 0
+    private(set) var offset = 0
 
     var availableBytes: Int {
         return data.count - offset
@@ -35,12 +35,19 @@ class ByteStream {
 
     init(_ data: Data) {
         self.data = data
+        self.offset = data.startIndex
     }
 
-    func read<T>(_ type: T.Type) -> T {
+    func read<T: FixedWidthInteger>(_ type: T.Type, bigEndian: Bool = false) -> T {
         let size = MemoryLayout<T>.size
         let value = data[offset..<(offset + size)].to(type: type)
         offset += size
+        return bigEndian ? T(bigEndian: value) : value
+    }
+
+    func readBool() -> Bool {
+        let value = data[offset..<(offset + 1)].to(type: Bool.self)
+        offset += 1
         return value
     }
 
@@ -83,5 +90,23 @@ class ByteStream {
         let value = data[offset..<(offset + count)]
         offset += count
         return Data(value)
+    }
+
+    func read(_ type: Data.Type) -> Data {
+        let len = read(VarInt.self)
+        return read(Data.self, count: Int(len.underlyingValue))
+    }
+
+    func read(_ type: [Data].Type) -> [Data] {
+        let len = read(VarInt.self)
+        return (0..<len.underlyingValue).map { _ in
+            read(Data.self)
+        }
+    }
+
+    @discardableResult
+    func advance(by n: Data.Index) -> Data.Index {
+        offset = offset.advanced(by: n)
+        return offset
     }
 }

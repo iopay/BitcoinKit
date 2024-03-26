@@ -80,7 +80,7 @@ public struct VersionMessage {
         guard byteStream.availableBytes > 0 else {
             return VersionMessage(version: version, services: services, timestamp: timestamp, yourAddress: yourAddress, myAddress: myAddress, nonce: nonce, userAgent: userAgent, startHeight: startHeight, relay: nil)
         }
-        let relay = byteStream.read(Bool.self)
+        let relay = byteStream.readBool()
 
         return VersionMessage(version: version, services: services, timestamp: timestamp, yourAddress: yourAddress, myAddress: myAddress, nonce: nonce, userAgent: userAgent, startHeight: startHeight, relay: relay)
     }

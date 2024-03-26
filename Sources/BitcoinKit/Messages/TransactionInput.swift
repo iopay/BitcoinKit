@@ -32,11 +32,13 @@ public struct TransactionInput {
     public var scriptLength: VarInt {
         return VarInt(signatureScript.count)
     }
+
+    public var update = PsbtInputUpdate()
     /// Computational Script for confirming transaction authorization
-    public let signatureScript: Data
+    public var signatureScript: Data
 //    public let redeemScript: Data?
 
-    public let witness: [Data]
+    public var witness: [Data]
     /// Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
     public let sequence: UInt32
 

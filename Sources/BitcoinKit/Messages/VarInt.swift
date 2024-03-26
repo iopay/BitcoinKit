@@ -81,6 +81,10 @@ public struct VarInt: ExpressibleByIntegerLiteral {
     public static func deserialize(_ data: Data) -> VarInt {
         return data.to(type: self)
     }
+
+    var encodingLength: UInt8 {
+        length == 1 ? 1 : length + 1
+    }
 }
 
 extension VarInt: CustomStringConvertible {
