@@ -78,3 +78,5 @@ public struct TransactionOutput {
         return TransactionOutput(value: value, lockingScript: lockingScript)
     }
 }
+
+typealias WitnessUtxo = TransactionOutput

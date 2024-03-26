@@ -25,12 +25,6 @@
 
 import Foundation
 
-public struct GlobalXPub {
-    public let extendedPubkey: Data
-    public let masterFingerprint: Data
-    public let path: String;
-}
-
 /// tx describes a bitcoin transaction, in reply to getdata
 public struct Transaction {
     private static let ADVANCED_TRANSACTION_MARKER: UInt8 = 0x00
@@ -57,7 +51,7 @@ public struct Transaction {
     public let lockTime: UInt32
 
     public var globalXpub: [GlobalXPub]?
-    public var unknownKeyVals: [Transaction.PsbtKeyValue]?
+    public var unknownKeyVals: [PsbtKeyValue]?
 
     public var txHash: Data {
         return Crypto.sha256sha256(serialized())
@@ -210,7 +204,7 @@ extension Transaction {
         var hashOutputs = Data()
 
         if !hashType.inputIsAnyoneCanPay {
-//            var data = Data(capacity: 36 * inputs.count)
+            //            var data = Data(capacity: 36 * inputs.count)
 
             hashPrevouts = Data(inputs.flatMap({ $0.previousOutput.serialized() })).sha256()
 
@@ -241,10 +235,10 @@ extension Transaction {
 
         let spendType: UInt8 = ((leafHash != nil) ? 2 : 0) + ((annex != nil) ? 1 : 0)
         let sigMsgSize = 174 -
-            (hashType.inputIsAnyoneCanPay ? 49 : 0) -
-            (hashType.isNone ? 32 : 0) +
-            ((annex != nil) ? 32 : 0) +
-            ((leafHash != nil) ? 37 : 0)
+        (hashType.inputIsAnyoneCanPay ? 49 : 0) -
+        (hashType.isNone ? 32 : 0) +
+        ((annex != nil) ? 32 : 0) +
+        ((leafHash != nil) ? 37 : 0)
 
         var data = Data()
         data += UInt8(0)//hashType.uint8
@@ -303,158 +297,9 @@ extension Transaction {
             }
         }
 
-//        let tapLeafHashes = inputs[inputIndex].
+        //        let tapLeafHashes = inputs[inputIndex].
         /// TODO:
 
         return hashes
     }
-
 }
-
-extension Transaction {
-    public typealias PsbtKeyValue = (key: Data, value: Data)
-
-    static func fromPsbtHex(_ hex: String) {
-
-    }
-
-    static func fromPsbtHex(_ buffer: Data) throws -> Transaction {
-        let byteStream = ByteStream(buffer)
-
-        guard byteStream.read(UInt32.self, bigEndian: true) == 0x70736274, byteStream.read(UInt8.self) == 0xff else {
-            throw PsbtError.invalidMagicNumber
-        }
-
-        var globalKeyIndex = [String: Bool]()
-        var globalMapKeyVals = [PsbtKeyValue]()
-        while try byteStream.read(UInt8.self) != 0 {
-            byteStream.advance(by: -1)
-
-            let key = try byteStream.read(Data.self)
-            let value = try byteStream.read(Data.self)
-            if globalKeyIndex[key.hex] == true {
-                throw PsbtError.keyMustUnique(key.hex)
-            }
-            globalKeyIndex[key.hex] = true
-            globalMapKeyVals.append((key, value))
-        }
-
-        let unsignedTxMaps = globalMapKeyVals.filter { $0.key.bytes[0] == PsbtGlobalTypes.UNSIGNED_TX.rawValue }
-        guard unsignedTxMaps.count == 1 else {
-            throw PsbtError.multiUnsignedTx
-        }
-
-        var unsigned = Transaction.deserialize(unsignedTxMaps[0].value)
-
-        var inputKeyVals = [[PsbtKeyValue]]()
-        var outputKeyVals = [[PsbtKeyValue]]()
-
-        for _ in 0..<unsigned.inputs.count {
-            var inputKeyIndex = [String: Bool]()
-            var input = [PsbtKeyValue]()
-            while try byteStream.read(UInt8.self) != 0 {
-                byteStream.advance(by: -1)
-
-                let key = try byteStream.read(Data.self)
-                let value = try byteStream.read(Data.self)
-
-                if inputKeyIndex[key.hex] == true {
-                    throw PsbtError.keyMustUnique(key.hex)
-                }
-                inputKeyIndex[key.hex] = true
-                input.append((key, value))
-            }
-            inputKeyVals.append(input)
-        }
-
-        for _ in 0..<unsigned.outputs.count {
-            var outputKeyIndex = [String: Bool]()
-            var output = [PsbtKeyValue]()
-            while try byteStream.read(UInt8.self) != 0 {
-                byteStream.advance(by: -1)
-
-                let key = try byteStream.read(Data.self)
-                let value = try byteStream.read(Data.self)
-
-                if outputKeyIndex[key.hex] == true {
-                    throw PsbtError.keyMustUnique(key.hex)
-                }
-                outputKeyIndex[key.hex] = true
-                output.append((key, value))
-            }
-            outputKeyVals.append(output)
-        }
-
-        var txExist = false
-        for keyVals in globalMapKeyVals {
-            switch keyVals.key[0] {
-            case PsbtGlobalTypes.UNSIGNED_TX.rawValue:
-                guard !txExist else {
-                    throw PsbtError.multiUnsignedTx
-                }
-                txExist = true
-            case PsbtGlobalTypes.GLOBAL_XPUB.rawValue:
-                if unsigned.globalXpub == nil {
-                    unsigned.globalXpub = []
-                }
-                unsigned.globalXpub?.append(try decodeGlobalXpub(keyVal: keyVals))
-            default:
-                if unsigned.unknownKeyVals == nil {
-                    unsigned.unknownKeyVals = []
-                }
-                unsigned.unknownKeyVals?.append(keyVals)
-            }
-        }
-
-//        var inputs = [TransactionInput]()
-        for i in 0..<unsigned.inputs.count {
-            unsigned.inputs[i].update = try PsbtInputUpdate.deserialize(from: inputKeyVals[i])
-//            for keyVals in inputKeyVals[i] {
-//                switch keyVals.key[0] {
-//                case PsbtInputTypes.NON_WITNESS_UTXO.rawValue:
-//                    ()
-//                default:
-//                    ()
-//                }
-//            }
-        }
-
-//        let inputs = try inputKeyVals.map { try PsbtInputUpdate.deserialize(from: $0) }
-//        let outpus = try outputKeyVals.map { try PsbtOutputUpdate.deserialize(from: $0) }
-
-        for i in 0..<unsigned.outputs.count {
-            unsigned.outputs[i].update = try PsbtOutputUpdate.deserialize(from: outputKeyVals[i])
-//            for keyVals in outputKeyVals[i] {
-//                switch keyVals.key[0] {
-//                case PsbtOutputTypes.REDEEM_SCRIPT.rawValue:
-//                    ()
-//                default:
-//                    ()
-//                }
-//            }
-        }
-
-//        fatalError()
-        return unsigned
-    }
-}
-
-func decodeGlobalXpub(keyVal: Transaction.PsbtKeyValue) throws -> GlobalXPub {
-        let pubkey = keyVal.key[1...]
-    guard keyVal.key.count == 79, [2, 3].contains(keyVal.key[46]), (keyVal.value.count / 4) % 1 == 0 else {
-            throw PsbtError.unexpectedEnd
-        }
-//        let masterFingerprint = keyVal.value[0..<4]
-        var path = "m"
-        for i in 0..<(keyVal.value.count / 4 - 1) {
-            let val = ByteStream(keyVal.value[(i * 4 + 4 + keyVal.value.startIndex)...]).read(UInt32.self)
-            let isHard = (val & 0x80000000) != 0
-            let idx = val & 0x7fffffff
-            path += "/"
-            path += String(idx, radix: 10)
-            isHard ? path +=  "'" : ()
-        }
-    return .init(extendedPubkey: keyVal.key[1...], masterFingerprint: keyVal.value[0..<4], path: path)
-    }
-
-

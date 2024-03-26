@@ -16,6 +16,4 @@ public enum PsbtError: Error {
     case invalidInputFormat(PsbtInputTypes, Data)
     case multipleOutputKey(PsbtOutputTypes)
     case invalidOutputFormat(PsbtOutputTypes, Data)
-//    case invalidKey(key: PsbtInputTypes, buffer: Data)
-//    case partialSigFromat(Data)
 }

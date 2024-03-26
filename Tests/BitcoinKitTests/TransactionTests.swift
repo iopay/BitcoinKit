@@ -205,24 +205,22 @@ class TransactionTests: XCTestCase {
 
     func testP2sh() throws {
         let privatekey = try PrivateKey(wif: "cS9Q18GhbUtsgqHC1dSnq2kD2GXe7FDKuxm5JhFxesR3NPDbtsRz")
-
+        let p2wpkh = privatekey.publicKey().nativeSegwit()
+        let p2sh = privatekey.publicKey().nestedSegwit()
+        
         let utxos = [
             TransactionOutPoint(hash: Data(Data(hex: "338e9e0357c4be9d6d583665f789dcaf4bde9b0589f5906e8a3457549016a8f0").reversed()), index: 3),
         ]
         let inputs = utxos.map {
             TransactionInput(previousOutput: $0, sequence: UInt32.max)
         }
-//        let unspent = utxos.enumerated().map { i, op in
-//            var preOutput = TransactionOutput(value: 49006, lockingScript: Data(hex: "a91421be9d00c3305b9e5a9eb628953ef7071c003fc687"))
-//            preOutput.redeemScript = Data(hex: "0014ec535b08b689033c8afc6a3a7b46489d4f72b55c")
-//            return UnspentTransaction(output: preOutput, outpoint: utxos[i])
-//        }
+
         let outputs = [
-            TransactionOutput(value: 1000, lockingScript: Data(hex: "a91421be9d00c3305b9e5a9eb628953ef7071c003fc687")),
+            TransactionOutput(value: 1000, lockingScript: p2sh.output),
         ]
 
         let unspent = utxos.map { u in
-            UnspentTransaction(output: TransactionOutput(value: 49006, lockingScript: Data(hex: "a91421be9d00c3305b9e5a9eb628953ef7071c003fc687")), outpoint: u, redeemScript: Data(hex: "0014ec535b08b689033c8afc6a3a7b46489d4f72b55c"))
+            UnspentTransaction(output: TransactionOutput(value: 49006, lockingScript: p2sh.output), outpoint: u, redeemScript: p2wpkh.output)
         }
 
         let tx = Transaction(version: 2, inputs: inputs, outputs: outputs, lockTime: 0)

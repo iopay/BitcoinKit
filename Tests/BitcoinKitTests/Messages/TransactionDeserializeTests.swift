@@ -31,11 +31,6 @@ final class TransactionDeserializeTests: XCTestCase {
         XCTAssertEqual(tx.outputs[0].value, 1000)
     }
 
-    func testPsbtInputOutputTypes() {
-        PsbtInputTypes.allCases.forEach { print($0, $0.rawValue) }
-        PsbtOutputTypes.allCases.forEach { print($0, $0.rawValue) }
-    }
-
     func testDeserialPsbt() throws {
         let hex = "70736274ff0100530200000001f0a816905457348a6e90f589059bde4bafdc89f76536586d9dbec457039e8e330300000000ffffffff01e80300000000000017a91421be9d00c3305b9e5a9eb628953ef7071c003fc68700000000000101206ebf00000000000017a91421be9d00c3305b9e5a9eb628953ef7071c003fc6870104160014ec535b08b689033c8afc6a3a7b46489d4f72b55c0000"
         let tx = try Transaction.fromPsbtHex(Data(hex: hex))
@@ -47,6 +42,8 @@ final class TransactionDeserializeTests: XCTestCase {
         XCTAssertEqual(tx.inputs[0].previousOutput.index, 3)
         XCTAssertEqual(tx.outputs[0].lockingScript.hex, "a91421be9d00c3305b9e5a9eb628953ef7071c003fc687")
         XCTAssertEqual(tx.outputs[0].value, 1000)
+
+        XCTAssertEqual(tx.serializedPsbtHex().hex, hex)
     }
 
     func testDeserialPsbt2() throws {
@@ -93,5 +90,7 @@ final class TransactionDeserializeTests: XCTestCase {
         XCTAssertEqual(tx.outputs[1].value, 100000000)
 
         XCTAssertNotNil(Transaction.deserialize(tx.inputs[0].update.nonWitnessUtxo!))
+
+        XCTAssertEqual(tx.serializedPsbtHex().hex, hex)
     }
 }

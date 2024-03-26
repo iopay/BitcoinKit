@@ -205,6 +205,11 @@ struct TapScriptSig {
     let pubKey: Data
     let signature: Data
     let leafHash: Data
+
+    func serializedKeyVal() -> PsbtKeyValue {
+        let key: Data = [PsbtInputTypes.TAP_SCRIPT_SIG.rawValue] + pubKey + leafHash
+        return PsbtKeyValue(key, signature)
+    }
 }
 
 /// TODO

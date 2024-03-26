@@ -9,7 +9,7 @@ import Foundation
 
 public class PsbtInputUpdate {
     var nonWitnessUtxo: Data?
-    var witnessUtxo: TransactionOutput?
+    var witnessUtxo: WitnessUtxo?
     var partialSig: [PartialSig]?
     var sighashType: UInt8?
     var redeemScript: Data?
@@ -24,9 +24,62 @@ public class PsbtInputUpdate {
     var tapBip32Derivation: [TapBip32Derivation]?
     var tapInternalKey: Data?
     var tapMerkleRoot: Data?
-    var unknownKeyVals: [Transaction.PsbtKeyValue]?
+    var unknownKeyVals: [PsbtKeyValue]?
 
-    public static func deserialize(from keyVals: [Transaction.PsbtKeyValue]) throws -> PsbtInputUpdate {
+    public func serializedKeyVals() -> [PsbtKeyValue] {
+        var keyVals = [PsbtKeyValue]()
+        if let nonWitnessUtxo {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.NON_WITNESS_UTXO.rawValue]), nonWitnessUtxo))
+        }
+        if let witnessUtxo {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.WITNESS_UTXO.rawValue]), witnessUtxo.serialized()))
+        }
+        if let partialSig {
+            keyVals.append(contentsOf: partialSig.map { $0.serializedKeyVal() })
+        }
+        if let sighashType {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.SIGHASH_TYPE.rawValue]), Data(from: UInt32(sighashType))))
+        }
+        if let redeemScript {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.REDEEM_SCRIPT.rawValue]), redeemScript))
+        }
+        if let witnessScript {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.WITNESS_SCRIPT.rawValue]), witnessScript))
+        }
+        if let bip32Derivation {
+            keyVals.append(contentsOf: bip32Derivation.map { $0.serializedKeyVal(PsbtInputTypes.BIP32_DERIVATION.rawValue) })
+        }
+        if let finalScriptSig {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.FINAL_SCRIPTSIG.rawValue]), finalScriptSig))
+        }
+        if let finalScriptWitness {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.FINAL_SCRIPTWITNESS.rawValue]), finalScriptWitness))
+        }
+        if let porCommitment {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.POR_COMMITMENT.rawValue]), porCommitment.data(using: .utf8)!))
+        }
+        if let tapKeySig {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.TAP_KEY_SIG.rawValue]), tapKeySig))
+        }
+        if let tapScriptSig {
+            keyVals.append(contentsOf: tapScriptSig.map { $0.serializedKeyVal() })
+        }
+        if let tapLeafScript {
+            keyVals.append(contentsOf: tapLeafScript.map { $0.serializedKeyVal() })
+        }
+        if let tapBip32Derivation {
+            keyVals.append(contentsOf: tapBip32Derivation.map { $0.serializedKeyVal(PsbtInputTypes.TAP_BIP32_DERIVATION.rawValue) })
+        }
+        if let tapInternalKey {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.TAP_INTERNAL_KEY.rawValue]), tapInternalKey))
+        }
+        if let tapMerkleRoot {
+            keyVals.append(PsbtKeyValue(Data([PsbtInputTypes.TAP_MERKLE_ROOT.rawValue]), tapMerkleRoot))
+        }
+        return keyVals
+    }
+
+    public static func deserialize(from keyVals: [PsbtKeyValue]) throws -> PsbtInputUpdate {
         let update = PsbtInputUpdate()
         for keyVal in keyVals {
             switch PsbtInputTypes(rawValue: keyVal.key[0]) {
@@ -41,7 +94,7 @@ public class PsbtInputUpdate {
                 guard update.witnessUtxo == nil else {
                     throw PsbtError.multipleInputKey(.WITNESS_UTXO)
                 }
-                update.witnessUtxo = TransactionOutput.deserialize(.init(keyVal.value))
+                update.witnessUtxo = WitnessUtxo.deserialize(.init(keyVal.value))
             case .PARTIAL_SIG:
                 if update.partialSig == nil {
                     update.partialSig = []
@@ -129,18 +182,44 @@ public class PsbtInputUpdate {
 struct PartialSig {
     let pubkey: Data
     let signature: Data
+
+    func serializedKeyVal() -> PsbtKeyValue {
+        return PsbtKeyValue([PsbtInputTypes.PARTIAL_SIG.rawValue] + pubkey, signature)
+    }
 }
 
 struct TapLeafScript {
     let leafVersion: UInt8
     let script: Data
     let controlBlock: Data
+
+    func serializedKeyVal() -> PsbtKeyValue {
+        let key: Data = [PsbtInputTypes.TAP_LEAF_SCRIPT.rawValue] + controlBlock
+        let value = script + [leafVersion]
+        return PsbtKeyValue(key, value)
+    }
 }
 
 struct Bip32Derivation {
     let masterFingerprint: Data
     let pubkey: Data
     let path: String
+
+    func serializedKeyVal(_ byte: UInt8) -> PsbtKeyValue {
+        let key: Data = [byte] + pubkey
+
+        let splitPath = path.split(separator: "/")
+        var value = masterFingerprint
+        splitPath[1...].forEach { s in
+            let isHard = s.last == "'"
+            var num = 0x7fffffff & (UInt32(isHard ? s.dropLast() : s, radix: 10) ?? 0)
+            if isHard {
+                num += 0x80000000
+            }
+            value += num
+        }
+        return PsbtKeyValue(key, value)
+    }
 }
 
 struct TapBip32Derivation {
@@ -162,17 +241,25 @@ struct TapBip32Derivation {
         self.path = bip32Derivation.path
         self.leafHashes = leafHashes
     }
+
+    func serializedKeyVal(_ byte: UInt8) -> PsbtKeyValue {
+        let base = Bip32Derivation(masterFingerprint: masterFingerprint, pubkey: pubkey, path: path).serializedKeyVal(byte)
+        var data = VarInt(leafHashes.count).serialized()
+        leafHashes.forEach { data += $0 }
+        data += base.value
+        return PsbtKeyValue(base.key, data)
+    }
 }
 
-func decodeNonWitnessUTXO(keyVal: Transaction.PsbtKeyValue) -> Data {
+func decodeNonWitnessUTXO(keyVal: PsbtKeyValue) -> Data {
     keyVal.value
 }
 
-func decodeWitnessUTXO(keyVal: Transaction.PsbtKeyValue) -> TransactionOutput {
+func decodeWitnessUTXO(keyVal: PsbtKeyValue) -> TransactionOutput {
     TransactionOutput.deserialize(.init(keyVal.value))
 }
 
-func decodePartialSig(keyVal: Transaction.PsbtKeyValue) throws -> PartialSig {
+func decodePartialSig(keyVal: PsbtKeyValue) throws -> PartialSig {
     if (
         !(keyVal.key.count == 34 || keyVal.key.count == 66) ||
         ![2, 3, 4].contains(keyVal.key[1])
@@ -184,7 +271,7 @@ func decodePartialSig(keyVal: Transaction.PsbtKeyValue) throws -> PartialSig {
 
 }
 
-func decodeBip32Derivation(keyVal: Transaction.PsbtKeyValue, isValid: (Data) -> Bool = isValidDERKey) throws -> Bip32Derivation {
+func decodeBip32Derivation(keyVal: PsbtKeyValue, isValid: (Data) -> Bool = isValidDERKey) throws -> Bip32Derivation {
     let pubkey = keyVal.key[1...]
     guard isValid(pubkey), (keyVal.value.count / 4) % 1 == 0 else {
         throw PsbtError.invalidInputFormat(.BIP32_DERIVATION, keyVal.key)
@@ -201,10 +288,10 @@ func decodeBip32Derivation(keyVal: Transaction.PsbtKeyValue, isValid: (Data) -> 
     return .init(masterFingerprint: keyVal.value[keyVal.value.startIndex ..< keyVal.value.startIndex + 4], pubkey: pubkey, path: path)
 }
 
-func decodeTapBip32Derivation(keyVal: Transaction.PsbtKeyValue) throws -> TapBip32Derivation {
+func decodeTapBip32Derivation(keyVal: PsbtKeyValue) throws -> TapBip32Derivation {
     let mHashs = keyVal.value.to(type: VarInt.self)
     let mHashlens = mHashs.encodingLength
-    let bip32Derivation = try decodeBip32Derivation(keyVal: (keyVal.key, keyVal.value[(mHashlens + UInt8(mHashs.underlyingValue) * 32)...]), isValid: isValidBIP340Key)
+    let bip32Derivation = try decodeBip32Derivation(keyVal: PsbtKeyValue(keyVal.key, keyVal.value[(mHashlens + UInt8(mHashs.underlyingValue) * 32)...]), isValid: isValidBIP340Key)
     var leafHashes = [Data]()
     var offset = mHashlens
     for _ in 0..<mHashs.underlyingValue {
@@ -214,14 +301,14 @@ func decodeTapBip32Derivation(keyVal: Transaction.PsbtKeyValue) throws -> TapBip
     return .init(bip32Derivation: bip32Derivation, leafHashes: leafHashes)
 }
 
-func decodeTapScriptSig(keyVal: Transaction.PsbtKeyValue) throws -> TapScriptSig {
+func decodeTapScriptSig(keyVal: PsbtKeyValue) throws -> TapScriptSig {
     guard keyVal.key.count == 65, keyVal.value.count != 64, keyVal.value.count != 65 else {
         throw PsbtError.invalidInputFormat(.TAP_SCRIPT_SIG, keyVal.key)
     }
     return .init(pubKey: keyVal.key[1..<33], signature: keyVal.key[33...], leafHash: keyVal.value)
 }
 
-func decodeTapLeafScript(keyVal: Transaction.PsbtKeyValue) throws -> TapLeafScript {
+func decodeTapLeafScript(keyVal: PsbtKeyValue) throws -> TapLeafScript {
     guard (keyVal.key.count - 2) % 32 == 0 else {
         throw PsbtError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
     }

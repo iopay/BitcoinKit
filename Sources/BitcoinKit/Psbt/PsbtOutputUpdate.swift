@@ -14,9 +14,32 @@ public class PsbtOutputUpdate {
     var tapInternalKey: Data?
     var tapTree: TapTree?
     var tapBip32Derivation: [TapBip32Derivation]?
-    var unknownKeyVals: [Transaction.PsbtKeyValue]?
+    var unknownKeyVals: [PsbtKeyValue]?
 
-    public static func deserialize(from keyVals: [Transaction.PsbtKeyValue]) throws -> PsbtOutputUpdate {
+    public func serializedKeyVals() -> [PsbtKeyValue] {
+        var keyVals = [PsbtKeyValue]()
+        if let redeemScript {
+            keyVals.append(PsbtKeyValue(Data([PsbtOutputTypes.REDEEM_SCRIPT.rawValue]), redeemScript))
+        }
+        if let witnessScript {
+            keyVals.append(PsbtKeyValue(Data([PsbtOutputTypes.WITNESS_SCRIPT.rawValue]), witnessScript))
+        }
+        if let bip32Derivation {
+            keyVals.append(contentsOf: bip32Derivation.map { $0.serializedKeyVal(PsbtOutputTypes.BIP32_DERIVATION.rawValue) })
+        }
+        if let tapInternalKey {
+            keyVals.append(PsbtKeyValue(Data([PsbtOutputTypes.TAP_INTERNAL_KEY.rawValue]), tapInternalKey))
+        }
+        if let tapTree {
+            keyVals.append(tapTree.serializedKeyVal())
+        }
+        if let tapBip32Derivation {
+            keyVals.append(contentsOf: tapBip32Derivation.map { $0.serializedKeyVal(PsbtOutputTypes.TAP_BIP32_DERIVATION.rawValue) })
+        }
+        return keyVals
+    }
+
+    public static func deserialize(from keyVals: [PsbtKeyValue]) throws -> PsbtOutputUpdate {
         let update = PsbtOutputUpdate()
         for keyVal in keyVals {
             switch PsbtOutputTypes(rawValue: keyVal.key[0]) {
@@ -71,9 +94,21 @@ struct TapLeaf {
 
 struct TapTree {
     let leaves: [TapLeaf]
+
+    func serializedKeyVal() -> PsbtKeyValue {
+        let key = Data([PsbtOutputTypes.TAP_TREE.rawValue])
+        var data = Data()
+        leaves.forEach { leaf in
+            data += leaf.depth
+            data += leaf.leafVersion
+            data += VarInt(leaf.script.count).serialized()
+            data += leaf.script
+        }
+        return PsbtKeyValue(key, data)
+    }
 }
 
-func decodeTapTree(keyVal: Transaction.PsbtKeyValue) throws -> TapTree {
+func decodeTapTree(keyVal: PsbtKeyValue) throws -> TapTree {
     var data = [TapLeaf]()
     var offset = 0
     let byteStream = ByteStream(keyVal.value)
