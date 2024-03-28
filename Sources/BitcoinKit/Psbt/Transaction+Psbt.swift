@@ -8,11 +8,11 @@
 import Foundation
 
 extension Transaction {
-    static func fromPsbtHex(_ hex: String) throws -> Transaction {
+    public static func fromPsbtHex(_ hex: String) throws -> Transaction {
         try fromPsbtHex(Data(hex: hex))
     }
 
-    static func fromPsbtHex(_ buffer: Data) throws -> Transaction {
+    public static func fromPsbtHex(_ buffer: Data) throws -> Transaction {
         let byteStream = ByteStream(buffer)
 
         guard byteStream.read(UInt32.self, bigEndian: true) == 0x70736274, byteStream.read(UInt8.self) == 0xff else {
