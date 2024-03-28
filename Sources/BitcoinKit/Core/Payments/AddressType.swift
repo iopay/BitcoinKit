@@ -57,7 +57,7 @@ public func createAddressFromString(_ address: String) throws -> Address {
             if data.count == 20 {
                 return P2wpkh(hash: data, network: network)
             } else if data.count == 32 {
-                // TODO: p2wsh
+                return P2Wsh(hash: data, network: network)
             }
         } else if version == 1 {
             if data.count == 32 {
