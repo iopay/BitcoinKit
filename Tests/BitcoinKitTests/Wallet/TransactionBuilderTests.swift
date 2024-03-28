@@ -77,6 +77,8 @@ class TransactionBuilderTests: XCTestCase {
         let utxo = UnspentTransaction(output: .init(value: balance, lockingScript: Data(hex: "76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac")), outpoint: outputPoint)
 
         let input = TransactionInput(previousOutput: outputPoint, sequence: UInt32.max)
+        input.update.witnessUtxo = .init(value: balance, lockingScript: Data(hex: "76a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac"))
+
         let output1 = TransactionOutput(value: amount, lockingScript: Script(address: to)!.data)
         let output2 = TransactionOutput(value: balance - amount - fee, lockingScript: Script(address: from)!.data)
         let tx = Transaction(version: 1, inputs: [input], outputs: [output1, output2], lockTime: 0)
@@ -87,7 +89,7 @@ class TransactionBuilderTests: XCTestCase {
         XCTAssertEqual(tx.serialized().hex, "0100000001b62a450298656a2b3f319be49de3c7fccaca389690d076d25a6beded378e1aa60800000000ffffffff0240420f00000000001976a914e5495ffe01a0598c25d2470d56742effe75237a788ac395c2e00000000001976a914806738d85849e50bce67d5d9d4dd7fb025ffd97288ac00000000")
 
         let helper = BTCSignatureHashHelper(hashType: .ALL)
-        let signer = TransactionSigner(unspentTransactions: [utxo], transaction: tx, sighashHelper: helper)
+        let signer = TransactionSigner(transaction: tx, sighashHelper: helper)
         let signedTx = try signer.sign(with: [privateKey])
 
 //        let signed = privateKey.sign(signHash)

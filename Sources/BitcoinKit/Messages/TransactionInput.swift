@@ -72,3 +72,46 @@ public struct TransactionInput {
         return TransactionInput(previousOutput: previousOutput, sequence: sequence, signatureScript: signatureScript)
     }
 }
+
+extension TransactionInput {
+    var utxo: TransactionOutput {
+        if let witnessUtxo = update.witnessUtxo {
+            return witnessUtxo
+        } else if let nonWitnessUtxo = update.nonWitnessUtxo {
+            let tx = Transaction.deserialize(nonWitnessUtxo)
+            return tx.outputs[Int(previousOutput.index)]
+        } else {
+            fatalError()
+        }
+    }
+
+    var isTaprootInput: Bool {
+        update.tapInternalKey != nil ||
+        update.tapMerkleRoot != nil ||
+        (update.tapLeafScript?.isEmpty == false) ||
+        (update.tapBip32Derivation?.isEmpty == false) ||
+        (update.witnessUtxo != nil && isP2TR(update.witnessUtxo!.lockingScript))
+    }
+
+    var isP2SH: Bool {
+        update.redeemScript != nil
+    }
+
+    var isP2WSH: Bool {
+        update.witnessScript != nil
+    }
+
+    var isSegwit: Bool {
+        isP2WSH || isP2WPKH(script)
+    }
+
+    var script: Data {
+        if let redeemScript = update.redeemScript {
+            return redeemScript
+        } else if let witnessScript = update.witnessScript {
+            return witnessScript
+        } else {
+            return utxo.lockingScript
+        }
+    }
+}

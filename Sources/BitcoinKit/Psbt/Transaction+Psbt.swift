@@ -39,6 +39,7 @@ extension Transaction {
         }
 
         var unsigned = Transaction.deserialize(unsignedTxMaps[0].value)
+        unsigned.unsigned = unsignedTxMaps[0].value
 
         var inputKeyVals = [[PsbtKeyValue]]()
         var outputKeyVals = [[PsbtKeyValue]]()
@@ -108,20 +109,21 @@ extension Transaction {
             unsigned.outputs[i].update = try PsbtOutputUpdate.deserialize(from: outputKeyVals[i])
         }
 
-        //        fatalError()
         return unsigned
     }
 
     public func serializedKeyVals() -> [PsbtKeyValue] {
         var keyVals = [PsbtKeyValue]()
-        keyVals.append(PsbtKeyValue(Data([PsbtGlobalTypes.UNSIGNED_TX.rawValue]), serialized()))
+        if let unsigned {
+            keyVals.append(PsbtKeyValue(Data([PsbtGlobalTypes.UNSIGNED_TX.rawValue]), unsigned))
+        }
         if let globalXpub {
             keyVals.append(contentsOf: globalXpub.compactMap { $0.serializedKeyVal() })
         }
         return keyVals
     }
 
-    func serializedPsbtHex() -> Data {
+    public func serializedPsbtHex() -> Data {
         var data = Data()
         data += UInt32(0x70736274).bigEndian
         data += UInt8(0xff)

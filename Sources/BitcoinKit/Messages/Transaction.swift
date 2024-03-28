@@ -50,6 +50,7 @@ public struct Transaction {
     /// The block number or timestamp at which this transaction is unlocked:
     public let lockTime: UInt32
 
+    var unsigned: Data?
     public var globalXpub: [GlobalXPub]?
     public var unknownKeyVals: [PsbtKeyValue]?
 
@@ -68,6 +69,13 @@ public struct Transaction {
             }
         }
         return false
+    }
+
+    public init() {
+        self.version = 2
+        self.inputs = []
+        self.outputs = []
+        self.lockTime = 0
     }
 
     public init(version: UInt32, inputs: [TransactionInput], outputs: [TransactionOutput], lockTime: UInt32) {
@@ -281,14 +289,14 @@ extension Transaction {
         return taggedHash(.TapSighash, data: [0x00] + data)
     }
 
-    func getTaprootHashesForSig(inputs: [UnspentTransaction], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
-        let prevOuts = inputs.map { ($0.output.value, $0.script ) }
+    func getTaprootHashesForSig(inputs: [TransactionInput], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
+        let prevOuts = inputs.map { ($0.utxo.value, $0.utxo.lockingScript ) }
         let signingScripts = inputs.map { $0.script }
-        let values = inputs.map { $0.output.value }
+        let values = inputs.map { $0.utxo.value }
 
         var hashes = [(hash: Data, leafHash: Data?)]()
 
-        if inputs[inputIndex].tapInternalKey != nil {
+        if inputs[inputIndex].update.tapInternalKey != nil {
             let script = signingScripts[inputIndex]
             let outputKey = isP2TR(script) ? script[2..<34] : Data()
             if toXOnly(publicKey) == outputKey {

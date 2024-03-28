@@ -62,13 +62,10 @@ class CryptoTests: XCTestCase {
 
     func testSignSchnorr() throws {
         let pk = try PrivateKey(wif: "cMaiBc8cCbUcM4uyBCHfDabidYUR8EACuSm9rgRkxQPCsBma4sbX")
-        let tweaked = pk.tweak(taggedHash(.TapTweak, data: pk.publicKey().xOnly))
 
-//        let signed = try
-
-        XCTAssertEqual(tweaked.data.hex, "1b35e8a6a1b43af6295e9f13734e54e77be515ca490729accc6d99d43ab4824c")
+        XCTAssertEqual(pk.tweaked.data.hex, "1b35e8a6a1b43af6295e9f13734e54e77be515ca490729accc6d99d43ab4824c")
         XCTAssertEqual(pk.publicKey().data.sha256().hex, "bd4dabd41b0ea82c40c8acede2279cc756e156fb1947259a036e87e5fc37cb4e")
-        try XCTAssertEqual(_Crypto.signSchnorr(pk.publicKey().data.sha256(), with: tweaked.data).hex, "28cb00079c9f4e7cf7deae769c9d9e4f7e2e3e003f252e96e8838eece4d82fb3b667280afad442891f9b3fea04936e18bbe9f6a11106e69fb73ab47f350ac001")
+        try XCTAssertEqual(_Crypto.signSchnorr(pk.publicKey().data.sha256(), with: pk.tweaked.data).hex, "28cb00079c9f4e7cf7deae769c9d9e4f7e2e3e003f252e96e8838eece4d82fb3b667280afad442891f9b3fea04936e18bbe9f6a11106e69fb73ab47f350ac001")
 
         try XCTAssertEqual(_Crypto.signSchnorr(
             Data(hex: "7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c"),
@@ -87,6 +84,12 @@ class CryptoTests: XCTestCase {
         XCTAssertEqual(Crypto.bip0322Hash("message").hex, "8ca090fa05878a38a0831da888481c1f3845462cc234be4ebc47541b45421ac1")
         XCTAssertEqual(Crypto.bip0322Hash("").hex, "c90c269c4f8fcbe6880f72a721ddfbf1914268a794cbb21cfafee13770ae19f1")
         XCTAssertEqual(Crypto.bip0322Hash("Hello World").hex, "f0eb03b1a75ac6d9847f55c624a99169b5dccba2a31f5b23bea77ba270de0a7a")
+    }
+
+    func testSignMessage() throws {
+        let key = try PrivateKey(wif: "cW62cANWa6wXmGPvLMUziJY9Y92apyqRcoopqLfdbaBQw58UMziF")
+        let signed = Crypto.signMessage("hello world~", privateKey: key)
+        XCTAssertEqual(signed, "IPMGDtIM+fTrJ5ynw002g5679BLQOn+B4RMS8i5xSwMMT+gW5TZCpgdCbh0v6tt8iHYlj+xKr4Rc5NNp76XATJ8=")
     }
 
     func testSignMessageOfBIP322Simple() throws {

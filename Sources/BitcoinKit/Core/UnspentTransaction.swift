@@ -40,27 +40,3 @@ public struct UnspentTransaction {
         self.tapInternalKey = tapInternalKey
     }
 }
-
-extension UnspentTransaction {
-    var isP2SH: Bool {
-        redeemScript != nil
-    }
-
-    var isP2WSH: Bool {
-        witnessScript != nil
-    }
-
-    var isSegwit: Bool {
-        isP2WSH || isP2WPKH(script)
-    }
-
-    var script: Data {
-        if let redeemScript = redeemScript {
-            return redeemScript
-        } else if let witnessScript = witnessScript {
-            return witnessScript
-        } else {
-            return output.lockingScript
-        }
-    }
-}

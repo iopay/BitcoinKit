@@ -161,9 +161,7 @@ class Bech32Tetst: XCTestCase {
         let pub = privatekey.publicKey().data
         let xonly_pub = pub.count == 32 ? pub : pub.dropFirst()
 
-        let tweakedChildNode = privatekey.tweak(
-            taggedHash(.TapTweak, data: xonly_pub)
-            )
+        let tweakedChildNode = privatekey.tweaked
 
         XCTAssertEqual(tweakedChildNode.data.hex, "1b35e8a6a1b43af6295e9f13734e54e77be515ca490729accc6d99d43ab4824c")
     }

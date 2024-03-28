@@ -131,18 +131,20 @@ public struct Crypto {
         ], outputs: [
             .init(value: 0, lockingScript: Data([0x6a]))
         ], lockTime: 0)
-        var unspent = UnspentTransaction(output: .init(value: 0, lockingScript: outputScript), outpoint: .init(hash: txToSpendHash, index: 0))
+//        var unspent = UnspentTransaction(output: .init(value: 0, lockingScript: outputScript), outpoint: .init(hash: txToSpendHash, index: 0))
+        txToSign.inputs[0].update.witnessUtxo = .init(value: 0, lockingScript: outputScript)
         if address.type == .P2TR {
-            unspent.tapInternalKey = xOnlyPubKey
+//            unspent.tapInternalKey = xOnlyPubKey
+            txToSign.inputs[0].update.tapInternalKey = xOnlyPubKey
         }
 
-        let signer = TransactionSigner(unspentTransactions: [unspent], transaction: txToSign, sighashHelper: BTCSignatureHashHelper(hashType: .ALL))
+        let signer = TransactionSigner(transaction: txToSign, sighashHelper: BTCSignatureHashHelper(hashType: .ALL))
         let key = if address.type == .P2TR {
-            privateKey.tweak(taggedHash(.TapTweak, data: xOnlyPubKey))
+            privateKey.tweaked
         } else {
             privateKey
         }
-        let signedTx = try signer.sign(with: [key])
+        let signedTx = try signer.sign(with: [privateKey])
 
         let length = VarInt(signedTx.inputs[0].witness.count)
         let res = signedTx.inputs[0].witness.map { VarInt($0.count).data + $0 }.reduce(length.data, { $0 + $1 })

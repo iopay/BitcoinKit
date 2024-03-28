@@ -170,8 +170,9 @@ public enum PrivateKeyError: Error {
 }
 
 extension PrivateKey {
-    public func tweak(_ tweak: Data) -> PrivateKey {
+    var tweaked: PrivateKey {
         let publicKey = computePublicKeyData()
+        let tweak = taggedHash(.TapTweak, data: publicKey.xOnly)
         let hasOddY = publicKey[0] == 3 || (publicKey[0] == 4 && publicKey.count >= 64 && publicKey[64] & 1 == 1)
         let pk = hasOddY ? _Crypto.privateNegate(data) : data
         let tweakedPrivateKey = _Crypto.privateAdd(pk, tweak: tweak)
