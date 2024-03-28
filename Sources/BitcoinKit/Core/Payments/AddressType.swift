@@ -13,6 +13,8 @@ public protocol Address {
     var network: Network { get }
     var script: Data { get }
     var type: AddressType { get }
+
+    init(address: String) throws
 }
 
 public extension Address where Self: PaymentType {
