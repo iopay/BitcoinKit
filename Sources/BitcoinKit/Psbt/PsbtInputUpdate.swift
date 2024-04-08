@@ -8,25 +8,25 @@
 import Foundation
 
 public class PsbtInputUpdate {
-    var nonWitnessUtxo: Data?
-    var witnessUtxo: WitnessUtxo?
-    var partialSig: [PartialSig]?
-    var sighashType: UInt8?
-    var redeemScript: Data?
-    var witnessScript: Data?
-    var bip32Derivation: [Bip32Derivation]?
-    var finalScriptSig: Data?
-    var finalScriptWitness: Data?
-    var porCommitment: String?
-    var tapKeySig: Data?
-    var tapScriptSig: [TapScriptSig]?
-    var tapLeafScript: [TapLeafScript]?
-    var tapBip32Derivation: [TapBip32Derivation]?
-    var tapInternalKey: Data?
-    var tapMerkleRoot: Data?
-    var unknownKeyVals: [PsbtKeyValue]?
+    public var nonWitnessUtxo: Data?
+    public var witnessUtxo: WitnessUtxo?
+    public var partialSig: [PartialSig]?
+    public var sighashType: UInt8?
+    public var redeemScript: Data?
+    public var witnessScript: Data?
+    public var bip32Derivation: [Bip32Derivation]?
+    public var finalScriptSig: Data?
+    public var finalScriptWitness: Data?
+    public var porCommitment: String?
+    public var tapKeySig: Data?
+    public var tapScriptSig: [TapScriptSig]?
+    public var tapLeafScript: [TapLeafScript]?
+    public var tapBip32Derivation: [TapBip32Derivation]?
+    public var tapInternalKey: Data?
+    public var tapMerkleRoot: Data?
+    public var unknownKeyVals: [PsbtKeyValue]?
 
-    init(nonWitnessUtxo: Data? = nil, witnessUtxo: WitnessUtxo? = nil, partialSig: [PartialSig]? = nil, sighashType: UInt8? = nil, redeemScript: Data? = nil, witnessScript: Data? = nil, bip32Derivation: [Bip32Derivation]? = nil, finalScriptSig: Data? = nil, finalScriptWitness: Data? = nil, porCommitment: String? = nil, tapKeySig: Data? = nil, tapScriptSig: [TapScriptSig]? = nil, tapLeafScript: [TapLeafScript]? = nil, tapBip32Derivation: [TapBip32Derivation]? = nil, tapInternalKey: Data? = nil, tapMerkleRoot: Data? = nil, unknownKeyVals: [PsbtKeyValue]? = nil) {
+    public init(nonWitnessUtxo: Data? = nil, witnessUtxo: WitnessUtxo? = nil, partialSig: [PartialSig]? = nil, sighashType: UInt8? = nil, redeemScript: Data? = nil, witnessScript: Data? = nil, bip32Derivation: [Bip32Derivation]? = nil, finalScriptSig: Data? = nil, finalScriptWitness: Data? = nil, porCommitment: String? = nil, tapKeySig: Data? = nil, tapScriptSig: [TapScriptSig]? = nil, tapLeafScript: [TapLeafScript]? = nil, tapBip32Derivation: [TapBip32Derivation]? = nil, tapInternalKey: Data? = nil, tapMerkleRoot: Data? = nil, unknownKeyVals: [PsbtKeyValue]? = nil) {
         self.nonWitnessUtxo = nonWitnessUtxo
         self.witnessUtxo = witnessUtxo
         self.partialSig = partialSig

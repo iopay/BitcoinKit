@@ -79,4 +79,4 @@ public struct TransactionOutput {
     }
 }
 
-typealias WitnessUtxo = TransactionOutput
+public typealias WitnessUtxo = TransactionOutput

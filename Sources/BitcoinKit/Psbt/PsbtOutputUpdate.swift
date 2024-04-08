@@ -8,13 +8,23 @@
 import Foundation
 
 public class PsbtOutputUpdate {
-    var redeemScript: Data?
-    var witnessScript: Data?
-    var bip32Derivation: [Bip32Derivation]?
-    var tapInternalKey: Data?
-    var tapTree: TapTree?
-    var tapBip32Derivation: [TapBip32Derivation]?
-    var unknownKeyVals: [PsbtKeyValue]?
+    public var redeemScript: Data?
+    public var witnessScript: Data?
+    public var bip32Derivation: [Bip32Derivation]?
+    public var tapInternalKey: Data?
+    public var tapTree: TapTree?
+    public var tapBip32Derivation: [TapBip32Derivation]?
+    public var unknownKeyVals: [PsbtKeyValue]?
+
+    public init(redeemScript: Data? = nil, witnessScript: Data? = nil, bip32Derivation: [Bip32Derivation]? = nil, tapInternalKey: Data? = nil, tapTree: TapTree? = nil, tapBip32Derivation: [TapBip32Derivation]? = nil, unknownKeyVals: [PsbtKeyValue]? = nil) {
+        self.redeemScript = redeemScript
+        self.witnessScript = witnessScript
+        self.bip32Derivation = bip32Derivation
+        self.tapInternalKey = tapInternalKey
+        self.tapTree = tapTree
+        self.tapBip32Derivation = tapBip32Derivation
+        self.unknownKeyVals = unknownKeyVals
+    }
 
     public func serializedKeyVals() -> [PsbtKeyValue] {
         var keyVals = [PsbtKeyValue]()

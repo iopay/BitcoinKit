@@ -8,10 +8,10 @@
 import Foundation
 
 public struct PsbtKeyValue {
-    let key: Data
-    let value: Data
+    public let key: Data
+    public let value: Data
 
-    init(_ key: Data, _ value: Data) {
+    public init(_ key: Data, _ value: Data) {
         self.key = key
         self.value = value
     }
@@ -22,13 +22,23 @@ public struct PsbtKeyValue {
 }
 
 public struct TapLeaf {
-    let leafVersion: UInt8
-    let script: Data
-    let depth: UInt8
+    public let leafVersion: UInt8
+    public let script: Data
+    public let depth: UInt8
+
+    public init(leafVersion: UInt8, script: Data, depth: UInt8) {
+        self.leafVersion = leafVersion
+        self.script = script
+        self.depth = depth
+    }
 }
 
 public struct TapTree {
-    let leaves: [TapLeaf]
+    public let leaves: [TapLeaf]
+
+    public init(leaves: [TapLeaf]) {
+        self.leaves = leaves
+    }
 
     func serializedKeyVal() -> PsbtKeyValue {
         let key = Data([PsbtOutputTypes.TAP_TREE.rawValue])
@@ -60,9 +70,15 @@ public struct TapTree {
 }
 
 public struct TapScriptSig {
-    let pubKey: Data
-    let signature: Data
-    let leafHash: Data
+    public let pubKey: Data
+    public let signature: Data
+    public let leafHash: Data
+
+    public init(pubKey: Data, signature: Data, leafHash: Data) {
+        self.pubKey = pubKey
+        self.signature = signature
+        self.leafHash = leafHash
+    }
 
     func serializedKeyVal() -> PsbtKeyValue {
         let key: Data = [PsbtInputTypes.TAP_SCRIPT_SIG.rawValue] + pubKey + leafHash
@@ -78,9 +94,15 @@ public struct TapScriptSig {
 }
 
 public struct TapLeafScript {
-    let leafVersion: UInt8
-    let script: Data
-    let controlBlock: Data
+    public let leafVersion: UInt8
+    public let script: Data
+    public let controlBlock: Data
+
+    public init(leafVersion: UInt8, script: Data, controlBlock: Data) {
+        self.leafVersion = leafVersion
+        self.script = script
+        self.controlBlock = controlBlock
+    }
 
     func serializedKeyVal() -> PsbtKeyValue {
         let key: Data = [PsbtInputTypes.TAP_LEAF_SCRIPT.rawValue] + controlBlock
@@ -101,8 +123,13 @@ public struct TapLeafScript {
 }
 
 public struct PartialSig {
-    let pubkey: Data
-    let signature: Data
+    public let pubkey: Data
+    public let signature: Data
+
+    public init(pubkey: Data, signature: Data) {
+        self.pubkey = pubkey
+        self.signature = signature
+    }
 
     func serializedKeyVal() -> PsbtKeyValue {
         return PsbtKeyValue([PsbtInputTypes.PARTIAL_SIG.rawValue] + pubkey, signature)
@@ -121,9 +148,15 @@ public struct PartialSig {
 }
 
 public struct Bip32Derivation {
-    let masterFingerprint: Data
-    let pubkey: Data
-    let path: String
+    public let masterFingerprint: Data
+    public let pubkey: Data
+    public let path: String
+
+    public init(masterFingerprint: Data, pubkey: Data, path: String) {
+        self.masterFingerprint = masterFingerprint
+        self.pubkey = pubkey
+        self.path = path
+    }
 
     func serializedKeyVal(_ byte: UInt8) -> PsbtKeyValue {
         let key: Data = [byte] + pubkey
@@ -160,19 +193,19 @@ public struct Bip32Derivation {
 }
 
 public struct TapBip32Derivation {
-    let masterFingerprint: Data
-    let pubkey: Data
-    let path: String
-    let leafHashes: [Data]
+    public let masterFingerprint: Data
+    public let pubkey: Data
+    public let path: String
+    public let leafHashes: [Data]
 
-    init(masterFingerprint: Data, pubkey: Data, path: String, leafHashes: [Data]) {
+    public init(masterFingerprint: Data, pubkey: Data, path: String, leafHashes: [Data]) {
         self.masterFingerprint = masterFingerprint
         self.pubkey = pubkey
         self.path = path
         self.leafHashes = leafHashes
     }
 
-    init(bip32Derivation: Bip32Derivation, leafHashes: [Data]) {
+    public init(bip32Derivation: Bip32Derivation, leafHashes: [Data]) {
         self.masterFingerprint = bip32Derivation.masterFingerprint
         self.pubkey = bip32Derivation.pubkey
         self.path = bip32Derivation.path
