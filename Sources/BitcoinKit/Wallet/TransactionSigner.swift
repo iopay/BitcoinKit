@@ -70,100 +70,101 @@ public final class TransactionSigner {
     ///   - keys: the private keys of the unspent transactions
     /// - Returns: A signed transaction. Error is thrown when the signing failed.
     public func sign(with keys: [PrivateKey]) throws -> Transaction {
-        for (i, input) in transaction.inputs.enumerated() {
-            // Select key
-            let utxo = input.utxo//unspentTransaction.output
-            let txin = signedInputs[i]
-            let pubkeyHash: Data = Script.getPublicKeyHash(from: input.script)
-//            print(utxo.lockingScript[2...].hex)
-//            print(keys[0].publicKey().data.xOnly.hex)
-            
-            if input.isTaprootInput {
-                guard let key = keys.first(where: { k in
-                    P2tr(internalPubKey: k.publicKey().xOnly).output == input.update.witnessUtxo?.lockingScript
-                }) else {
-                    throw TransactionSignerError.noKeyFound
-                }
-                if input.update.finalScriptSig == nil || input.update.finalScriptWitness == nil && input.update.tapInternalKey == nil {
-                    input.update.tapInternalKey = key.publicKey().xOnly
-                }
-
-                let hashesForSig = transaction.getTaprootHashesForSig(inputs: transaction.inputs, inputIndex: i, publicKey: key.tweaked.publicKey().data)
-                let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
-                    .map { hash, _ in
-                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
-                        return serializeTaprootSignature(sig: signature, sighashType: nil)
-                    }.first
-                let tapScriptSig = try hashesForSig.filter { $0.leafHash != nil }
-                    .map { hash, leafHash in
-                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
-                        return TapScriptSig(pubKey: toXOnly(key.publicKey().data), signature: signature, leafHash: leafHash!)
-                    }
-                /// TODO: tapScriptSig
-                let finalScriptWitness: [Data]
-                if let tapKeySig {
-                    input.update.tapKeySig = tapKeySig
-//                    let witness = p2trWitness(script: utxo.lockingScript, signature: tapKeySig)
-//                    finalScriptWitness = witnessStackToScriptWitness(witness: witness)
-                    finalScriptWitness = p2trWitness(script: utxo.lockingScript, signature: tapKeySig)
-                    input.update.finalScriptWitness = witnessStackToScriptWitness(witness: finalScriptWitness)
-                } else if !tapScriptSig.isEmpty {
-                    input.update.tapScriptSig = tapScriptSig
-                    finalScriptWitness = tapScriptFinalizer()
-                } else {
-                    finalScriptWitness = []
-                }
-
-                var copy = input
-                copy.witness = finalScriptWitness
-                copy.update.clearFinalizedInput()
-                signedInputs[i] = copy
-//                signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: nil, witness: finalScriptWitness)
-            } else {
-                guard let key = keys.first(where: { $0.publicKey().pubkeyHash == pubkeyHash }) else {
-                    throw TransactionSignerError.noKeyFound
-                }
-
-                let sighash: Data
-                if isP2WPKH(input.script) {
-                    let signingScript = try! Script().append(.OP_DUP)
-                        .append(.OP_HASH160)
-                        .appendData(pubkeyHash)
-                        .append(.OP_EQUALVERIFY)
-                        .append(.OP_CHECKSIG).data
-                    /// p2sh-p2wpkh, p2wpkh
-                    sighash = transaction.hashForWitnessV0(index: i, prevOutScript: signingScript, value: utxo.value, hashType: sighashHelper.hashType)
-                } else {
-
-                    // Sign transaction hash, p2pkh
-                    sighash = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
-                }
-                let signature: Data = try Crypto.sign(sighash, privateKey: key)
-                
-                // Create Signature Script
-                let sigWithHashType: Data = signature + [sighashHelper.hashType.uint8]
-
-                input.update.partialSig = [.init(pubkey: key.publicKey().data, signature: sigWithHashType)]
-
-                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: input, signature: sigWithHashType, pubkey: key.publicKey().data)
-
-                // Update TransactionInput
-//                signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: finalScriptSig, witness: finalScriptWitness)
-                var copy = input
-                copy.signatureScript = finalScriptSig ?? Data()
-                copy.witness = finalScriptWitness ?? []
-                signedInputs[i] = copy
-            }
-        }
-
-//        for input in transaction.inputs {
+        fatalError()
+//        for (i, input) in transaction.inputs.enumerated() {
+//            // Select key
+//            let utxo = input.utxo//unspentTransaction.output
+//            let txin = signedInputs[i]
+//            let pubkeyHash: Data = Script.getPublicKeyHash(from: input.script)
+////            print(utxo.lockingScript[2...].hex)
+////            print(keys[0].publicKey().data.xOnly.hex)
+//            
 //            if input.isTaprootInput {
+//                guard let key = keys.first(where: { k in
+//                    P2tr(internalPubKey: k.publicKey().xOnly).output == input.update.witnessUtxo?.lockingScript
+//                }) else {
+//                    throw TransactionSignerError.noKeyFound
+//                }
+//                if input.update.finalScriptSig == nil || input.update.finalScriptWitness == nil && input.update.tapInternalKey == nil {
+//                    input.update.tapInternalKey = key.publicKey().xOnly
+//                }
 //
+//                let hashesForSig = transaction.getTaprootHashesForSig(inputs: transaction.inputs, inputIndex: i, publicKey: key.tweaked.publicKey().data)
+//                let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
+//                    .map { hash, _ in
+//                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
+//                        return serializeTaprootSignature(sig: signature, sighashType: nil)
+//                    }.first
+//                let tapScriptSig = try hashesForSig.filter { $0.leafHash != nil }
+//                    .map { hash, leafHash in
+//                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
+//                        return TapScriptSig(pubKey: toXOnly(key.publicKey().data), signature: signature, leafHash: leafHash!)
+//                    }
+//                /// TODO: tapScriptSig
+//                let finalScriptWitness: [Data]
+//                if let tapKeySig {
+//                    input.update.tapKeySig = tapKeySig
+////                    let witness = p2trWitness(script: utxo.lockingScript, signature: tapKeySig)
+////                    finalScriptWitness = witnessStackToScriptWitness(witness: witness)
+//                    finalScriptWitness = p2trWitness(script: utxo.lockingScript, signature: tapKeySig)
+//                    input.update.finalScriptWitness = witnessStackToScriptWitness(witness: finalScriptWitness)
+//                } else if !tapScriptSig.isEmpty {
+//                    input.update.tapScriptSig = tapScriptSig
+//                    finalScriptWitness = tapScriptFinalizer()
+//                } else {
+//                    finalScriptWitness = []
+//                }
+//
+//                var copy = input
+//                copy.witness = finalScriptWitness
+//                copy.update.clearFinalizedInput()
+//                signedInputs[i] = copy
+////                signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: nil, witness: finalScriptWitness)
 //            } else {
+//                guard let key = keys.first(where: { $0.publicKey().pubkeyHash == pubkeyHash }) else {
+//                    throw TransactionSignerError.noKeyFound
+//                }
+//
+//                let sighash: Data
+//                if isP2WPKH(input.script) {
+//                    let signingScript = try! Script().append(.OP_DUP)
+//                        .append(.OP_HASH160)
+//                        .appendData(pubkeyHash)
+//                        .append(.OP_EQUALVERIFY)
+//                        .append(.OP_CHECKSIG).data
+//                    /// p2sh-p2wpkh, p2wpkh
+//                    sighash = transaction.hashForWitnessV0(index: i, prevOutScript: signingScript, value: utxo.value, hashType: sighashHelper.hashType)
+//                } else {
+//
+//                    // Sign transaction hash, p2pkh
+//                    sighash = sighashHelper.createSignatureHash(of: transaction, for: utxo, inputIndex: i)
+//                }
+//                let signature: Data = try Crypto.sign(sighash, privateKey: key)
+//                
+//                // Create Signature Script
+//                let sigWithHashType: Data = signature + [sighashHelper.hashType.uint8]
+//
+//                input.update.partialSig = [.init(pubkey: key.publicKey().data, signature: sigWithHashType)]
+//
 //                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: input, signature: sigWithHashType, pubkey: key.publicKey().data)
+//
+//                // Update TransactionInput
+////                signedInputs[i] = TransactionInput(previousOutput: txin.previousOutput, sequence: txin.sequence, signatureScript: finalScriptSig, witness: finalScriptWitness)
+//                var copy = input
+//                copy.signatureScript = finalScriptSig ?? Data()
+//                copy.witness = finalScriptWitness ?? []
+//                signedInputs[i] = copy
 //            }
 //        }
-        return signedTransaction
+//
+////        for input in transaction.inputs {
+////            if input.isTaprootInput {
+////
+////            } else {
+////                let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: input, signature: sigWithHashType, pubkey: key.publicKey().data)
+////            }
+////        }
+//        return signedTransaction
     }
 }
 
@@ -174,28 +175,28 @@ public final class TransactionSigner {
 //  if (isP2PK(script)) return 'pubkey';
 //  return 'nonstandard';
 //}
-func prepareFinalScripts(input: TransactionInput, signature: Data, pubkey: Data) -> (Data?, [Data]?) {
-    var finalScriptSig: Data? = nil
-    var finalScriptWitness: [Data]? = nil
-
-    if input.isSegwit {
-        if input.isP2WSH {
-            // TODO
-        } else {
-            finalScriptWitness = [signature, pubkey]
-        }
-        if input.isP2SH {
-            finalScriptSig = try! Script().appendData(input.script).data
-        }
-    } else {
-        if input.isP2SH {
-            finalScriptSig = try! Script().appendData(input.script).data
-        } else {
-            finalScriptSig = try! Script().appendData(signature).appendData(pubkey).data
-        }
-    }
-    return (finalScriptSig, finalScriptWitness)
-}
+//func prepareFinalScripts(input: TransactionInput, signature: Data, pubkey: Data) -> (Data?, [Data]?) {
+//    var finalScriptSig: Data? = nil
+//    var finalScriptWitness: [Data]? = nil
+//
+//    if input.isSegwit {
+//        if input.isP2WSH {
+//            // TODO
+//        } else {
+//            finalScriptWitness = [signature, pubkey]
+//        }
+//        if input.isP2SH {
+//            finalScriptSig = try! Script().appendData(input.script).data
+//        }
+//    } else {
+//        if input.isP2SH {
+//            finalScriptSig = try! Script().appendData(input.script).data
+//        } else {
+//            finalScriptSig = try! Script().appendData(signature).appendData(pubkey).data
+//        }
+//    }
+//    return (finalScriptSig, finalScriptWitness)
+//}
 
 //
 //func getTaprootHashesForSig(inputs: [UnspentTransaction], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) {

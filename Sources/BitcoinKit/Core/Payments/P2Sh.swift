@@ -6,13 +6,18 @@ public struct P2sh: PaymentType, Address {
     public let hash: Data
     public let address: String
     public let network: Network
-    public let type: AddressType = .P2SHP2WPKH
+    public private(set) var type: AddressType = .P2SH(nil)
 
     public init(redeem: PaymentType, network: Network = .mainnetBTC) {
-        self.network = network
-        self.hash = Crypto.sha256ripemd160(redeem.output)
-        self.output = try! Script().append(.OP_HASH160).appendData(hash).append(.OP_EQUAL).data
-        self.address = Base58Check.encode([network.scripthash] + hash)
+        let hash = Crypto.sha256ripemd160(redeem.output)
+        self.init(hash: hash, network: network)
+        if let address = redeem as? Address {
+            self.type = .P2SH(address.type)
+        }
+    }
+
+    public init(output: Data) throws {
+        try self.init(output: output, network: .mainnetBTC)
     }
 
     public init(output: Data, network: Network = .mainnetBTC) throws {
@@ -52,5 +57,26 @@ public struct P2sh: PaymentType, Address {
         self.address = address
         self.hash = Data(decoded[1...])
         self.output = try! Script().append(.OP_HASH160).appendData(hash).append(.OP_EQUAL).data
+    }
+}
+
+extension P2sh {
+//    public func witnessFrom(redeem: WitnessPaymentType, signature: [PartialSig]) -> [Data] {
+//        redeem.witnessFromSignature(signature)
+//    }
+//
+//    public func inputFrom(redeem: WitnessPaymentType, signature: [PartialSig]) -> Data {
+//        let redeemInput = redeem.inputFromSignature(signature)
+////        let chunks = Script(data: redeemInput)?.scriptChunks.map(\.chunkData)
+//        return try! Script(data: redeemInput)!.appendData(redeem.output).data
+//    }
+//
+//    public func witnessFrom(redeem: P2Wsh, signature: [PartialSig]) -> [Data] {
+//        
+//
+//    }
+
+    public static func inputFrom(redeem: PaymentType, input: Data) -> Data {
+        try! Script(data: input)!.appendData(redeem.output).data
     }
 }

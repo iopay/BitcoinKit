@@ -8,6 +8,10 @@
 import Foundation
 
 public enum PsbtError: Error {
+    case indexOutOfBounds
+    case utxoInputItemRequired
+    case p2shMissingRedeemScript
+    case p2wshMissingWitnessScript
     case unexpectedEnd
     case invalidMagicNumber
     case keyMustUnique(String)

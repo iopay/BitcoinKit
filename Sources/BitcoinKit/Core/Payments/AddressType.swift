@@ -1,10 +1,10 @@
 import Foundation
 
-public enum AddressType {
+public indirect enum AddressType: Equatable {
     case P2PKH
     case P2WPKH
-    case P2SHP2WPKH
-    case P2WSH
+    case P2SH(AddressType?)
+    case P2WSH(AddressType?)
     case P2TR
 }
 

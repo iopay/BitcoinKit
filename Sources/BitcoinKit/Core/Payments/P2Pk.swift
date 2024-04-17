@@ -1,12 +1,12 @@
 import Foundation
 
-public struct P2pkPayment: PaymentType {
-    public let data: Data
+public struct P2pk: WitnessPaymentType {
+    public let pubKey: Data
     public let output: Data
 
-    public init(data: Data) {
-        self.data = data
-        self.output = try! Script().appendData(data).append(.OP_CHECKSIG).data
+    public init(pubKey: Data) {
+        self.pubKey = pubKey
+        self.output = try! Script().appendData(pubKey).append(.OP_CHECKSIG).data
     }
 
     public init(output: Data) throws {
@@ -15,6 +15,14 @@ public struct P2pkPayment: PaymentType {
         guard script.scriptChunks.count == 2, script.chunk(at: 1).opCode == .OP_CHECKSIG else {
             throw PaymentError.outputInvalid
         }
-        self.data = script.chunk(at: 0).chunkData
+        self.pubKey = script.chunk(at: 0).chunkData
+    }
+
+    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+        try! Script().appendData(sig[0].signature).data
+    }
+
+    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+        []
     }
 }

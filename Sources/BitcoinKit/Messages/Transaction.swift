@@ -26,7 +26,7 @@
 import Foundation
 
 /// tx describes a bitcoin transaction, in reply to getdata
-public struct Transaction {
+public class Transaction {
     private static let ADVANCED_TRANSACTION_MARKER: UInt8 = 0x00
     private static let ADVANCED_TRANSACTION_FLAG: UInt8 = 0x01
     /// Transaction data format version (note, this is signed)
@@ -38,21 +38,17 @@ public struct Transaction {
         return VarInt(inputs.count)
     }
     /// A list of 1 or more transaction inputs or sources for coins
-    public var inputs: [TransactionInput]
+    public internal(set) var inputs: [TransactionInput]
     /// Number of Transaction outputs
     public var txOutCount: VarInt {
         return VarInt(outputs.count)
     }
     /// A list of 1 or more transaction outputs or destinations for coins
-    public var outputs: [TransactionOutput]
+    public internal(set) var outputs: [TransactionOutput]
     /// A list of witnesses, one for each input; omitted if flag is omitted above
     // public let witnesses: [TransactionWitness] // A list of witnesses, one for each input; omitted if flag is omitted above
     /// The block number or timestamp at which this transaction is unlocked:
     public let lockTime: UInt32
-
-    var unsigned: Data?
-    public var globalXpub: [GlobalXPub]?
-    public var unknownKeyVals: [PsbtKeyValue]?
 
     public var txHash: Data {
         return Crypto.sha256sha256(serialized())
@@ -83,6 +79,14 @@ public struct Transaction {
         self.inputs = inputs
         self.outputs = outputs
         self.lockTime = lockTime
+    }
+
+    public func addInput(_ input: TransactionInput) {
+        inputs.append(input)
+    }
+
+    public func addOutput(_ output: TransactionOutput) {
+        outputs.append(output)
     }
 
     public func serialized() -> Data {
@@ -289,25 +293,35 @@ extension Transaction {
         return taggedHash(.TapSighash, data: [0x00] + data)
     }
 
-    func getTaprootHashesForSig(inputs: [TransactionInput], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
-        let prevOuts = inputs.map { ($0.utxo.value, $0.utxo.lockingScript ) }
-        let signingScripts = inputs.map { $0.script }
-        let values = inputs.map { $0.utxo.value }
-
-        var hashes = [(hash: Data, leafHash: Data?)]()
-
-        if inputs[inputIndex].update.tapInternalKey != nil {
-            let script = signingScripts[inputIndex]
-            let outputKey = isP2TR(script) ? script[2..<34] : Data()
-            if toXOnly(publicKey) == outputKey {
-                let tapKeyHash = hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
-                hashes.append((tapKeyHash, nil))
-            }
-        }
-
-        //        let tapLeafHashes = inputs[inputIndex].
-        /// TODO:
-
-        return hashes
+    func hashForSignature(
+        inIndex: Int,
+        prevOutScript: Data,
+        hashType: UInt8
+    ) -> Data {
+        /// TODO
+//        BTCSignatureHashHelper(hashType: .ALL).createSignatureHash(of: self, for: inputs[inIndex].utxo, inputIndex: inIndex)
+        fatalError()
     }
+
+//    func getTaprootHashesForSig(inputs: [TransactionInput], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
+//        let prevOuts = inputs.map { ($0.utxo.value, $0.utxo.lockingScript ) }
+//        let signingScripts = inputs.map { $0.script }
+//        let values = inputs.map { $0.utxo.value }
+//
+//        var hashes = [(hash: Data, leafHash: Data?)]()
+//
+//        if inputs[inputIndex].update.tapInternalKey != nil {
+//            let script = signingScripts[inputIndex]
+//            let outputKey = isP2TR(script) ? script[2..<34] : Data()
+//            if toXOnly(publicKey) == outputKey {
+//                let tapKeyHash = hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
+//                hashes.append((tapKeyHash, nil))
+//            }
+//        }
+//
+//        //        let tapLeafHashes = inputs[inputIndex].
+//        /// TODO:
+//
+//        return hashes
+//    }
 }

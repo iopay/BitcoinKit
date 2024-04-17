@@ -1,12 +1,16 @@
 import Foundation
 
 /// p2pkh(legacy address)
-public struct P2pkh: PaymentType, Address {
+public struct P2pkh: WitnessPaymentType, Address {
     public let output: Data
     public let hash: Data
     public let address: String
     public let network: Network
     public let type: AddressType = .P2PKH
+
+    public init(output: Data) throws {
+        try self.init(output: output, network: .mainnetBTC)
+    }
 
     public init(output: Data, network: Network = .mainnetBTC) throws {
         self.output = output
@@ -25,16 +29,8 @@ public struct P2pkh: PaymentType, Address {
     }
 
     public init(pubkey: Data, network: Network = .mainnetBTC) {
-        self.hash = Crypto.sha256ripemd160(pubkey)
-        self.network = network
-        self.address = Base58Check.encode([network.pubkeyhash] + hash)
-        self.output = try! Script()
-            .append(.OP_DUP)
-            .append(.OP_HASH160)
-            .appendData(hash)
-            .append(.OP_EQUALVERIFY)
-            .append(.OP_CHECKSIG)
-            .data
+        let hash = Crypto.sha256ripemd160(pubkey)
+        self.init(hash: hash, network: network)
     }
 
     public init(hash: Data, network: Network = .mainnetBTC) {
@@ -72,5 +68,13 @@ public struct P2pkh: PaymentType, Address {
             .append(.OP_EQUALVERIFY)
             .append(.OP_CHECKSIG)
             .data
+    }
+
+    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+        try! Script().appendData(sig[0].signature).appendData(sig[0].pubkey).data
+    }
+
+    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+        []
     }
 }

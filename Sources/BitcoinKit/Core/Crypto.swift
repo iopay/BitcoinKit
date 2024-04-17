@@ -132,11 +132,11 @@ public struct Crypto {
             .init(value: 0, lockingScript: Data([0x6a]))
         ], lockTime: 0)
 //        var unspent = UnspentTransaction(output: .init(value: 0, lockingScript: outputScript), outpoint: .init(hash: txToSpendHash, index: 0))
-        txToSign.inputs[0].update.witnessUtxo = .init(value: 0, lockingScript: outputScript)
-        if address.type == .P2TR {
-//            unspent.tapInternalKey = xOnlyPubKey
-            txToSign.inputs[0].update.tapInternalKey = xOnlyPubKey
-        }
+//        txToSign.inputs[0].update.witnessUtxo = .init(value: 0, lockingScript: outputScript)
+//        if address.type == .P2TR {
+////            unspent.tapInternalKey = xOnlyPubKey
+//            txToSign.inputs[0].update.tapInternalKey = xOnlyPubKey
+//        }
 
         let signer = TransactionSigner(transaction: txToSign, sighashHelper: BTCSignatureHashHelper(hashType: .ALL))
         let key = if address.type == .P2TR {

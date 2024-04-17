@@ -1,12 +1,20 @@
 import Foundation
 
 /// p2wpkh(native segwit address)
-public struct P2wpkh: PaymentType, Address {
+public struct P2wpkh: WitnessPaymentType, Address {
     public var output: Data
     public let hash: Data
     public var address: String
     public var network: Network
     public let type: AddressType = .P2WPKH
+
+    public init(output: Data) throws {
+        self.init(output: output, network: .mainnetBTC)
+    }
+
+    public init(output: Data, network: Network = .mainnetBTC) {
+        self.init(hash: output[2...], network: network)
+    }
 
     public init(pubkey: Data, network: Network = .mainnetBTC) {
         self.network = network
@@ -41,5 +49,13 @@ public struct P2wpkh: PaymentType, Address {
         }
         self.address = address
         self.output = try! Script().append(.OP_0).appendData(hash).data
+    }
+
+    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+        .init()
+    }
+
+    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+        [sig[0].signature, sig[0].pubkey]
     }
 }

@@ -33,7 +33,6 @@ public struct TransactionInput {
         return VarInt(signatureScript.count)
     }
 
-    public var update = PsbtInputUpdate()
     /// Computational Script for confirming transaction authorization
     public var signatureScript: Data
 //    public let redeemScript: Data?
@@ -42,7 +41,7 @@ public struct TransactionInput {
     /// Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
     public let sequence: UInt32
 
-    public init(previousOutput: TransactionOutPoint, sequence: UInt32, signatureScript: Data? = nil, witness: [Data]? = nil) {
+    public init(previousOutput: TransactionOutPoint, sequence: UInt32 = UInt32.max, signatureScript: Data? = nil, witness: [Data]? = nil) {
         self.previousOutput = previousOutput
         self.signatureScript = signatureScript ?? Data()
         self.sequence = sequence
@@ -74,44 +73,44 @@ public struct TransactionInput {
 }
 
 extension TransactionInput {
-    var utxo: TransactionOutput {
-        if let witnessUtxo = update.witnessUtxo {
-            return witnessUtxo
-        } else if let nonWitnessUtxo = update.nonWitnessUtxo {
-            let tx = Transaction.deserialize(nonWitnessUtxo)
-            return tx.outputs[Int(previousOutput.index)]
-        } else {
-            fatalError()
-        }
-    }
-
-    var isTaprootInput: Bool {
-        update.tapInternalKey != nil ||
-        update.tapMerkleRoot != nil ||
-        (update.tapLeafScript?.isEmpty == false) ||
-        (update.tapBip32Derivation?.isEmpty == false) ||
-        (update.witnessUtxo != nil && isP2TR(update.witnessUtxo!.lockingScript))
-    }
-
-    var isP2SH: Bool {
-        update.redeemScript != nil
-    }
-
-    var isP2WSH: Bool {
-        update.witnessScript != nil
-    }
-
-    var isSegwit: Bool {
-        isP2WSH || isP2WPKH(script)
-    }
-
-    var script: Data {
-        if let redeemScript = update.redeemScript {
-            return redeemScript
-        } else if let witnessScript = update.witnessScript {
-            return witnessScript
-        } else {
-            return utxo.lockingScript
-        }
-    }
+//    var utxo: TransactionOutput {
+//        if let witnessUtxo = update.witnessUtxo {
+//            return witnessUtxo
+//        } else if let nonWitnessUtxo = update.nonWitnessUtxo {
+//            let tx = Transaction.deserialize(nonWitnessUtxo)
+//            return tx.outputs[Int(previousOutput.index)]
+//        } else {
+//            fatalError()
+//        }
+//    }
+//
+//    var isTaprootInput: Bool {
+//        update.tapInternalKey != nil ||
+//        update.tapMerkleRoot != nil ||
+//        (update.tapLeafScript?.isEmpty == false) ||
+//        (update.tapBip32Derivation?.isEmpty == false) ||
+//        (update.witnessUtxo != nil && isP2TR(update.witnessUtxo!.lockingScript))
+//    }
+//
+//    var isP2SH: Bool {
+//        update.redeemScript != nil
+//    }
+//
+//    var isP2WSH: Bool {
+//        update.witnessScript != nil
+//    }
+//
+//    var isSegwit: Bool {
+//        isP2WSH || isP2WPKH(script)
+//    }
+//
+//    var script: Data {
+//        if let redeemScript = update.redeemScript {
+//            return redeemScript
+//        } else if let witnessScript = update.witnessScript {
+//            return witnessScript
+//        } else {
+//            return utxo.lockingScript
+//        }
+//    }
 }
