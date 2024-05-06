@@ -156,6 +156,8 @@ public class Transaction {
 }
 
 extension Transaction {
+    static let ONE = Data(repeating: 1, count: 1) + Data(repeating: 0, count: 31)
+
     func hashForWitnessV0(index: Int, prevOutScript: Data, value: UInt64, hashType: SighashType) -> Data {
         var hashOutputs = Data()
         var hashPrevouts = Data()
@@ -294,34 +296,52 @@ extension Transaction {
     }
 
     func hashForSignature(
-        inIndex: Int,
+        index: Int,
         prevOutScript: Data,
-        hashType: UInt8
+        hashType: SighashType
     ) -> Data {
-        /// TODO
-//        BTCSignatureHashHelper(hashType: .ALL).createSignatureHash(of: self, for: inputs[inIndex].utxo, inputIndex: inIndex)
-        fatalError()
-    }
+        guard index < inputs.count else {
+            return Self.ONE
+        }
+        let ourScript = try! Script(data: prevOutScript)!.deleteOccurrences(of: .OP_CODESEPARATOR).data
+        var ins = self.inputs
+        var outs = self.outputs
 
-//    func getTaprootHashesForSig(inputs: [TransactionInput], inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) -> [(hash: Data, leafHash: Data?)] {
-//        let prevOuts = inputs.map { ($0.utxo.value, $0.utxo.lockingScript ) }
-//        let signingScripts = inputs.map { $0.script }
-//        let values = inputs.map { $0.utxo.value }
-//
-//        var hashes = [(hash: Data, leafHash: Data?)]()
-//
-//        if inputs[inputIndex].update.tapInternalKey != nil {
-//            let script = signingScripts[inputIndex]
-//            let outputKey = isP2TR(script) ? script[2..<34] : Data()
-//            if toXOnly(publicKey) == outputKey {
-//                let tapKeyHash = hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
-//                hashes.append((tapKeyHash, nil))
-//            }
-//        }
-//
-//        //        let tapLeafHashes = inputs[inputIndex].
-//        /// TODO:
-//
-//        return hashes
-//    }
+        if hashType.isNone {
+            ins.enumerated().forEach { idx, ele in
+                if idx == index {
+                    ins[idx].sequence = 0
+                }
+            }
+        } else if hashType.isSingle {
+            if index >= outs.count {
+                return Self.ONE
+            }
+            let myOutput = self.outputs[index]
+            outs = Array(repeating: TransactionOutput(), count: index) + [myOutput]
+
+            (0..<ins.count).forEach { idx in
+                if idx == index {
+                    ins[idx].sequence = 0
+                }
+            }
+        }
+
+        if hashType.isAnyoneCanPay {
+            ins = [ins[index]]
+            ins[0].signatureScript = ourScript
+        } else {
+            (0..<ins.count).forEach { idx in
+                if idx == index {
+                    ins[idx].signatureScript = ourScript
+                } else {
+                    ins[idx].signatureScript = Data()
+                }
+            }
+        }
+
+        var data: Data = Transaction(version: version, inputs: ins, outputs: outs, lockTime: lockTime).serialized()
+        data += hashType.uint32
+        return Crypto.sha256sha256(data)
+    }
 }

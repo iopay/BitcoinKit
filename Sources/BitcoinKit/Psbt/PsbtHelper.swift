@@ -7,15 +7,6 @@
 
 import Foundation
 
-//func getMeaningfulScript(script: Data, index: Int,
-//                         //ioType: 'input' | 'output',
-//                         redeemScript: Data?, witnessScript: Data?) -> (
-//                            meaningfulScript: Data,
-//                            type: String//'p2sh' | 'p2wsh' | 'p2sh-p2wsh' | 'raw';
-//                         ) {
-//
-//                         }
-
 func checkKeyBuffer(keyBuf: Data, key: PsbtInputTypes) throws {
     if (keyBuf != Data([key.rawValue])) {
         throw PsbtError.invalidInputFormat(key, keyBuf)
@@ -73,34 +64,4 @@ extension PsbtInputUpdate {
         (tapBip32Derivation?.isEmpty == false) ||
         (witnessUtxo != nil && isP2TR(witnessUtxo!.lockingScript))
     }
-//
-//    var isP2SH: Bool {
-//        update.redeemScript != nil
-//    }
-//
-//    var isP2WSH: Bool {
-//        update.witnessScript != nil
-//    }
-//
-//    var isSegwit: Bool {
-//        isP2WSH || isP2WPKH(script)
-//    }
-//
-//    var script: Data {
-//        if let redeemScript = update.redeemScript {
-//            return redeemScript
-//        } else if let witnessScript = update.witnessScript {
-//            return witnessScript
-//        } else {
-//            return utxo.lockingScript
-//        }
-//    }
-//    func prevOutput() throws -> TransactionOutput {
-//    if let witnessUtxo {
-//        return witnessUtxo
-//    } else if let nonWitnessUtxo {
-//        return
-//    }
-//}
-
 }

@@ -1,16 +1,10 @@
 import Foundation
 
 public protocol PaymentType {
-//    associatedtype input = PaymentInput
     var output: Data { get }
     init(output: Data) throws
 }
 
-//public protocol PaymentInput {
-//    var input: Data { get }
-////    var signature: Data { get }
-//    var witness: [Data] { get }
-//}
 public protocol WitnessPaymentType: PaymentType {
     static func inputFromSignature(_ sig: [PartialSig]) -> Data
     static func witnessFromSignature(_ sig: [PartialSig]) -> [Data]
@@ -48,16 +42,4 @@ public let isP2WSHScript = isPaymentFactory(P2Wsh.self)
 public let isP2WPKH = isPaymentFactory(P2wpkh.self)
 public let isP2PKH = isPaymentFactory(P2pkh.self)
 public let isP2MS = isPaymentFactory(P2MS.self)
-
-protocol A {
-    associatedtype B //= Data
-
-    var b: B { get }
-}
-
-
-struct Cc: A {
-    var b: Never
-    
-    typealias B = Never
-}
+public let isP2TR = isPaymentFactory(P2tr.self)

@@ -21,17 +21,17 @@ public class Psbt {
         self.outputs = []
     }
 
-    public func addInput(prevOutput: TransactionOutPoint, sequence: UInt32 = UInt32.max, update: PsbtInputUpdate) {
+    public func addInput(prevOutput: TransactionOutPoint, sequence: UInt32 = UInt32.max, update: PsbtInputUpdate = PsbtInputUpdate()) {
         tx.addInput(.init(previousOutput: prevOutput, sequence: sequence))
         inputs.append(update)
     }
 
-    public func addOutput(output: TransactionOutput, update: PsbtOutputUpdate) {
+    public func addOutput(output: TransactionOutput, update: PsbtOutputUpdate = PsbtOutputUpdate()) {
         tx.addOutput(output)
         outputs.append(update)
     }
 
-    public func signAllInputs(with pk: PrivateKey, sigHashType: SighashType?) throws {
+    public func signAllInputs(with pk: PrivateKey, sigHashType: SighashType? = nil) throws {
         for i in 0..<inputs.count {
             try signInput(with: pk, at: i, sigHashType: sigHashType)
         }
@@ -52,12 +52,28 @@ public class Psbt {
         let (hash, _) = try getHashForSig(index: index)
         let signature: Data = try Crypto.sign(hash, privateKey: pk)
         /// TODO: sighashtype
-        let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [0x00])
+        let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [0x01])
         inputs[index].partialSig = [partialSig]
     }
 
     private func _signTaprootInput(with pk: PrivateKey, at index: Int, sigHashType: SighashType?) throws {
-
+        let hashesForSig = try getTaprootHashesForSig(inputIndex: index, publicKey: pk.publicKey().data)
+        let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
+            .map { hash, _ in
+                let signature = try Crypto.signSchnorr(hash, with: pk)
+                return serializeTaprootSignature(sig: signature, sighashType: nil)
+            }.first
+        let tapScriptSig = try hashesForSig.filter { $0.leafHash != nil }
+            .map { hash, leafHash in
+                let signature = try Crypto.signSchnorr(hash, with: pk)
+                return TapScriptSig(pubKey: toXOnly(pk.publicKey().data), signature: signature, leafHash: leafHash!)
+            }
+        if let tapKeySig {
+            inputs[index].tapKeySig = tapKeySig
+        }
+        if !tapScriptSig.isEmpty {
+            inputs[index].tapScriptSig = tapScriptSig
+        }
     }
 
     public func finalizeAllInputs() throws {
@@ -71,7 +87,7 @@ public class Psbt {
             throw PsbtError.indexOutOfBounds
         }
         if inputs[index].isTaprootInput {
-            _finalizeTaprootInput(index: index)
+            try _finalizeTaprootInput(index: index)
         } else {
             _finalizeInput(index: index)
         }
@@ -88,8 +104,18 @@ public class Psbt {
         inputs[index].clearFinalizedInput()
     }
 
-    private func _finalizeTaprootInput(index: Int) {
+    private func _finalizeTaprootInput(index: Int) throws {
+        if inputs[index].witnessUtxo == nil {
+            throw "Cannot finalize input \(index). Missing withness utxo."
+        }
+        if let tapKeySig = inputs[index].tapKeySig {
+            let finalScriptWitness = witnessStackToScriptWitness(witness: P2tr.witnessFromSignature(tapKeySig))
+            inputs[index].finalScriptWitness = finalScriptWitness
+        } else {
 
+        }
+
+        inputs[index].clearFinalizedInput()
     }
 
     private func getHashForSig(index: Int) throws -> (hash: Data, sighashType: SighashType) {
@@ -136,7 +162,7 @@ public class Psbt {
             let signingScript = P2pkh.init(hash: meaningfulScript[2...]).output
             hash = tx.hashForWitnessV0(index: index, prevOutScript: signingScript, value: prevOut.value, hashType: .BTC.ALL)
         } else {
-            hash = tx.hashForSignature(inIndex: index, prevOutScript: meaningfulScript, hashType: 0)
+            hash = tx.hashForSignature(index: index, prevOutScript: meaningfulScript, hashType: sigHashType)
         }
         return (hash, sigHashType)
     }
@@ -177,7 +203,6 @@ public class Psbt {
 
         if isSegwit {
             if isP2WSH {
-                // TODO
                 finalScriptWitness = witnessStackToScriptWitness(witness: p2wsh_witness!)
             } else {
                 finalScriptWitness = witnessStackToScriptWitness(witness: payment_witness)
@@ -195,8 +220,42 @@ public class Psbt {
         return (finalScriptSig, finalScriptWitness)
     }
 
+    func getTaprootHashesForSig(inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) throws -> [(hash: Data, leafHash: Data?)] {
+        let prevOuts = try inputs.map { try getScriptAndAmountFromUtxo(input: $0, index: inputIndex) }
+        let signingScripts = prevOuts.map(\.script)
+        let values = prevOuts.map(\.value)
+
+        var hashes = [(hash: Data, leafHash: Data?)]()
+
+        if inputs[inputIndex].tapInternalKey != nil && tapLeafHashToSign == nil {
+            let script = signingScripts[inputIndex]
+            let outputKey = isP2TR(script) ? script[2..<34] : Data()
+            if toXOnly(publicKey) == outputKey {
+                let tapKeyHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
+                hashes.append((tapKeyHash, nil))
+            }
+        }
+
+        //        let tapLeafHashes = inputs[inputIndex].
+        /// TODO:
+
+        return hashes
+    }
+
+    func getScriptAndAmountFromUtxo(input: PsbtInputUpdate, index: Int) throws -> (script: Data, value: UInt64) {
+        if let witnessUtxo = input.witnessUtxo {
+            return (witnessUtxo.lockingScript, witnessUtxo.value)
+        } else if let nonWitnessUtxo = input.nonWitnessUtxo {
+            let _tx = Transaction.deserialize(nonWitnessUtxo)
+            let out = _tx.outputs[Int(self.tx.inputs[index].previousOutput.index)]
+            return (out.lockingScript, out.value)
+        } else {
+            throw PsbtError.utxoInputItemRequired
+        }
+    }
+
     func extractTransaction() -> Transaction {
-        var tx = self.tx
+        let tx = self.tx
         inputs.enumerated().forEach { offset, element in
             if let finalScriptSig = element.finalScriptSig {
                 tx.inputs[offset].signatureScript = finalScriptSig

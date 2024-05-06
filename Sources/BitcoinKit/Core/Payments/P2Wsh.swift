@@ -7,6 +7,8 @@
 
 import Foundation
 
+extension String: Error {}
+
 public struct P2Wsh: PaymentType, Address {
     public let output: Data
     public let hash: Data
@@ -32,6 +34,9 @@ public struct P2Wsh: PaymentType, Address {
     }
 
     public init(output: Data) throws {
+        guard output.count == 34, output[0] == OpCode.OP_0.value, output[1] == 0x20 else {
+            throw "Output is invalid"
+        }
         self.init(output: output, network: .mainnetBTC)
     }
 

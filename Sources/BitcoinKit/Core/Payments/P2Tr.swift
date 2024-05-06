@@ -21,6 +21,9 @@ public struct P2tr: PaymentType, Address {
     }
 
     public init(output: Data) throws {
+        guard output.count == 34 && output[0] == OpCode.OP_1.value && output[1] == 0x20 else {
+            throw PaymentError.outputInvalid
+        }
         self.init(output: output, network: .mainnetBTC)
     }
     
@@ -46,5 +49,9 @@ public struct P2tr: PaymentType, Address {
         }
         self.address = address
         self.output = try! Script().append(.OP_1).appendData(payload).data
+    }
+
+    public static func witnessFromSignature(_ sig: Data) -> [Data] {
+        return [sig]
     }
 }

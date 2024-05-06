@@ -90,16 +90,7 @@ public final class TransactionSigner {
 //                }
 //
 //                let hashesForSig = transaction.getTaprootHashesForSig(inputs: transaction.inputs, inputIndex: i, publicKey: key.tweaked.publicKey().data)
-//                let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
-//                    .map { hash, _ in
-//                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
-//                        return serializeTaprootSignature(sig: signature, sighashType: nil)
-//                    }.first
-//                let tapScriptSig = try hashesForSig.filter { $0.leafHash != nil }
-//                    .map { hash, leafHash in
-//                        let signature = try Crypto.signSchnorr(hash, with: key.tweaked)
-//                        return TapScriptSig(pubKey: toXOnly(key.publicKey().data), signature: signature, leafHash: leafHash!)
-//                    }
+
 //                /// TODO: tapScriptSig
 //                let finalScriptWitness: [Data]
 //                if let tapKeySig {

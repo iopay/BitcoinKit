@@ -8,11 +8,11 @@
 import Foundation
 
 extension Psbt {
-    public static func fromPsbtHex(_ hex: String) throws -> Psbt {
-        try fromPsbtHex(Data(hex: hex))
+    public static func deserialize(_ hex: String) throws -> Psbt {
+        try deserialize(Data(hex: hex))
     }
 
-    public static func fromPsbtHex(_ buffer: Data) throws -> Psbt {
+    public static func deserialize(_ buffer: Data) throws -> Psbt {
         let byteStream = ByteStream(buffer)
 
         guard byteStream.read(UInt32.self, bigEndian: true) == 0x70736274, byteStream.read(UInt8.self) == 0xff else {
@@ -112,18 +112,9 @@ extension Psbt {
 
         return psbt
     }
+}
 
-    public func serializedKeyVals() -> [PsbtKeyValue] {
-        var keyVals = [PsbtKeyValue]()
-
-        keyVals.append(PsbtKeyValue(Data([PsbtGlobalTypes.UNSIGNED_TX.rawValue]), tx.serialized()))
-
-        if let globalXpub {
-            keyVals.append(contentsOf: globalXpub.compactMap { $0.serializedKeyVal() })
-        }
-        return keyVals
-    }
-
+extension Psbt {
     public func serialized() -> Data {
         var data = Data()
         data += UInt32(0x70736274).bigEndian
@@ -144,5 +135,16 @@ extension Psbt {
             outputKeyVals.forEach { data += $0.serialized() }
         }
         return data
+    }
+
+    public func serializedKeyVals() -> [PsbtKeyValue] {
+        var keyVals = [PsbtKeyValue]()
+
+        keyVals.append(PsbtKeyValue(Data([PsbtGlobalTypes.UNSIGNED_TX.rawValue]), tx.serialized()))
+
+        if let globalXpub {
+            keyVals.append(contentsOf: globalXpub.compactMap { $0.serializedKeyVal() })
+        }
+        return keyVals
     }
 }

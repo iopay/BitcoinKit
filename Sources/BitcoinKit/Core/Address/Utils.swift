@@ -15,11 +15,11 @@ import Foundation
 //    data[24] == OpCheckSig().value
 //}
 
-public func isP2TR(_ data: Data) -> Bool {
-    data.count == 34 &&
-    data[0] == OpCode.OP_1.value &&
-    data[1] == 0x20
-}
+//public func isP2TR(_ data: Data) -> Bool {
+//    data.count == 34 &&
+//    data[0] == OpCode.OP_1.value &&
+//    data[1] == 0x20
+//}
 
 public func toXOnly(_ data: Data) -> Data {
     data.count == 32 ? data : data.dropFirst()

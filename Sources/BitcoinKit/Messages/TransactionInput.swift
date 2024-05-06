@@ -39,7 +39,7 @@ public struct TransactionInput {
 
     public var witness: [Data]
     /// Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
-    public let sequence: UInt32
+    public var sequence: UInt32
 
     public init(previousOutput: TransactionOutPoint, sequence: UInt32 = UInt32.max, signatureScript: Data? = nil, witness: [Data]? = nil) {
         self.previousOutput = previousOutput
