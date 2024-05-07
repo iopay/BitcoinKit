@@ -248,14 +248,14 @@ extension Transaction {
         }
 
         let spendType: UInt8 = ((leafHash != nil) ? 2 : 0) + ((annex != nil) ? 1 : 0)
-        let sigMsgSize = 174 -
-        (hashType.inputIsAnyoneCanPay ? 49 : 0) -
-        (hashType.isNone ? 32 : 0) +
-        ((annex != nil) ? 32 : 0) +
-        ((leafHash != nil) ? 37 : 0)
+//        let sigMsgSize = 174 -
+//        (hashType.inputIsAnyoneCanPay ? 49 : 0) -
+//        (hashType.isNone ? 32 : 0) +
+//        ((annex != nil) ? 32 : 0) +
+//        ((leafHash != nil) ? 37 : 0)
 
         var data = Data()
-        data += UInt8(0)//hashType.uint8
+        data += hashType.uint8
         data += version
         data += lockTime
         data += hashPrevouts
@@ -278,16 +278,16 @@ extension Transaction {
             data += UInt32(index)
         }
 
-        if annex != nil {
-            data += (VarInt(annex!.count).serialized() + annex!).sha256()
+        if let annex {
+            data += (VarInt(annex.count).serialized() + annex).sha256()
         }
 
         if hashType.isSingle {
             data += hashOutputs
         }
 
-        if leafHash != nil {
-            data += leafHash!
+        if let leafHash {
+            data += leafHash
             data += UInt8(0)
             data += UInt32(0xffffffff)
         }

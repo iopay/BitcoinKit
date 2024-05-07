@@ -38,7 +38,7 @@ extension Psbt {
             throw PsbtError.multiUnsignedTx
         }
 
-        var unsigned = Transaction.deserialize(unsignedTxMaps[0].value)
+        let unsigned = Transaction.deserialize(unsignedTxMaps[0].value)
         let psbt = Psbt(tx: unsigned)
 
         var inputKeyVals = [[PsbtKeyValue]]()
@@ -105,7 +105,6 @@ extension Psbt {
             psbt.inputs.append(try PsbtInputUpdate.deserialize(from: inputKeyVals[i]))
         }
 
-        var outputs = [PsbtOutputUpdate]()
         for i in 0..<unsigned.outputs.count {
             psbt.outputs.append(try PsbtOutputUpdate.deserialize(from: outputKeyVals[i]))
         }

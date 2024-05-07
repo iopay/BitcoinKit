@@ -117,8 +117,8 @@ public enum BCHSighashType: SighashType {
 
 // MARK: BTC SighashType
 public enum BTCSighashType: SighashType {
-    case ALL, NONE, SINGLE, ALL_ANYONECANPAY, NONE_ANYONECANPAY, SINGLE_ANYONECANPAY
-    public init?(rawValue: UInt8) {
+    case ALL, NONE, SINGLE, ALL_ANYONECANPAY, NONE_ANYONECANPAY, SINGLE_ANYONECANPAY, UNEXPECTED(UInt8)
+    public init(rawValue: UInt8) {
         switch rawValue {
         case BTCSighashType.ALL.rawValue: self = .ALL
         case BTCSighashType.NONE.rawValue: self = .NONE
@@ -126,7 +126,7 @@ public enum BTCSighashType: SighashType {
         case BTCSighashType.ALL_ANYONECANPAY.rawValue: self = .ALL_ANYONECANPAY
         case BTCSighashType.NONE_ANYONECANPAY.rawValue: self = .NONE_ANYONECANPAY
         case BTCSighashType.SINGLE_ANYONECANPAY.rawValue: self = .SINGLE_ANYONECANPAY
-        default: return nil
+        default: self = .UNEXPECTED(rawValue)
         }
     }
 
@@ -138,6 +138,7 @@ public enum BTCSighashType: SighashType {
         case .ALL_ANYONECANPAY: return SIGHASH_ALL + SIGHASH_ANYONECANPAY // 10000001
         case .NONE_ANYONECANPAY: return SIGHASH_NONE + SIGHASH_ANYONECANPAY // 10000010
         case .SINGLE_ANYONECANPAY: return SIGHASH_SINGLE + SIGHASH_ANYONECANPAY // 10000011
+        case .UNEXPECTED(let raw): return raw
         }
     }
 }

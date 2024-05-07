@@ -31,32 +31,32 @@ public class Psbt {
         outputs.append(update)
     }
 
-    public func signAllInputs(with pk: PrivateKey, sigHashType: SighashType? = nil) throws {
+    public func signAllInputs(with pk: PrivateKey, sigHashTypes: [BTCSighashType]? = nil) throws {
         for i in 0..<inputs.count {
-            try signInput(with: pk, at: i, sigHashType: sigHashType)
+            try signInput(with: pk, at: i, sigHashTypes: sigHashTypes)
         }
     }
 
-    public func signInput(with pk: PrivateKey, at index: Int, sigHashType: SighashType?) throws {
+    public func signInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]? = nil) throws {
         guard index < inputs.count else {
             throw PsbtError.indexOutOfBounds
         }
         if inputs[index].isTaprootInput {
-            try _signTaprootInput(with: pk, at: index, sigHashType: sigHashType)
+            try _signTaprootInput(with: pk, at: index, sigHashTypes: sigHashTypes)
         } else {
-            try _signInput(with: pk, at: index, sigHashType: sigHashType)
+            try _signInput(with: pk, at: index, sigHashTypes: sigHashTypes)
         }
     }
 
-    private func _signInput(with pk: PrivateKey, at index: Int, sigHashType: SighashType?) throws {
-        let (hash, _) = try getHashForSig(index: index)
+    private func _signInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]?) throws {
+        let (hash, sigHashType) = try getHashForSig(index: index, sigHashTypes: sigHashTypes)
         let signature: Data = try Crypto.sign(hash, privateKey: pk)
         /// TODO: sighashtype
-        let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [0x01])
+        let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [sigHashType.rawValue])
         inputs[index].partialSig = [partialSig]
     }
 
-    private func _signTaprootInput(with pk: PrivateKey, at index: Int, sigHashType: SighashType?) throws {
+    private func _signTaprootInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]?) throws {
         let hashesForSig = try getTaprootHashesForSig(inputIndex: index, publicKey: pk.publicKey().data)
         let tapKeySig = try hashesForSig.filter { $0.leafHash == nil }
             .map { hash, _ in
@@ -118,11 +118,11 @@ public class Psbt {
         inputs[index].clearFinalizedInput()
     }
 
-    private func getHashForSig(index: Int) throws -> (hash: Data, sighashType: SighashType) {
+    private func getHashForSig(index: Int, sigHashTypes: [BTCSighashType]?) throws -> (hash: Data, sighashType: BTCSighashType) {
         let input = inputs[index]
-        /// TODO: sighashType
-//        let sigHashType = input.sighashType ?? BTCSighashType.ALL
-        let sigHashType = BTCSighashType.ALL
+        let sigHashType = (input.sighashType != nil) ? BTCSighashType(rawValue: input.sighashType!) : BTCSighashType.ALL
+        try checkSighashTypeAllowed(sigHashType: sigHashType, sigHashTypes: sigHashTypes)
+
         let prevOut: TransactionOutput
 
         if let witnessUtxo = inputs[index].witnessUtxo {
@@ -157,17 +157,17 @@ public class Psbt {
 
         let hash: Data
         if isP2SHP2WSH || isP2WSH {
-            hash = tx.hashForWitnessV0(index: index, prevOutScript: meaningfulScript, value: prevOut.value, hashType: .BTC.ALL)
+            hash = tx.hashForWitnessV0(index: index, prevOutScript: meaningfulScript, value: prevOut.value, hashType: sigHashType)
         } else if isP2WPKH(meaningfulScript) {
             let signingScript = P2pkh.init(hash: meaningfulScript[2...]).output
-            hash = tx.hashForWitnessV0(index: index, prevOutScript: signingScript, value: prevOut.value, hashType: .BTC.ALL)
+            hash = tx.hashForWitnessV0(index: index, prevOutScript: signingScript, value: prevOut.value, hashType: sigHashType)
         } else {
             hash = tx.hashForSignature(index: index, prevOutScript: meaningfulScript, hashType: sigHashType)
         }
         return (hash, sigHashType)
     }
 
-    func prepareFinalScripts(input: PsbtInputUpdate, index: Int) -> (Data?, Data?) {
+    private func prepareFinalScripts(input: PsbtInputUpdate, index: Int) -> (Data?, Data?) {
         let isP2SH = input.redeemScript != nil
         let isP2WSH = input.witnessScript != nil
         let script: Data
@@ -220,14 +220,18 @@ public class Psbt {
         return (finalScriptSig, finalScriptWitness)
     }
 
-    func getTaprootHashesForSig(inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil) throws -> [(hash: Data, leafHash: Data?)] {
+    private func getTaprootHashesForSig(inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil, sigHashTypes: [BTCSighashType]? = nil) throws -> [(hash: Data, leafHash: Data?)] {
+        let input = inputs[inputIndex]
+        let sigHashType = (input.sighashType != nil) ? BTCSighashType(rawValue: input.sighashType!) : BTCSighashType.ALL
+        try checkSighashTypeAllowed(sigHashType: sigHashType, sigHashTypes: sigHashTypes)
+
         let prevOuts = try inputs.map { try getScriptAndAmountFromUtxo(input: $0, index: inputIndex) }
         let signingScripts = prevOuts.map(\.script)
         let values = prevOuts.map(\.value)
 
         var hashes = [(hash: Data, leafHash: Data?)]()
 
-        if inputs[inputIndex].tapInternalKey != nil && tapLeafHashToSign == nil {
+        if input.tapInternalKey != nil && tapLeafHashToSign == nil {
             let script = signingScripts[inputIndex]
             let outputKey = isP2TR(script) ? script[2..<34] : Data()
             if toXOnly(publicKey) == outputKey {
@@ -242,7 +246,7 @@ public class Psbt {
         return hashes
     }
 
-    func getScriptAndAmountFromUtxo(input: PsbtInputUpdate, index: Int) throws -> (script: Data, value: UInt64) {
+    private func getScriptAndAmountFromUtxo(input: PsbtInputUpdate, index: Int) throws -> (script: Data, value: UInt64) {
         if let witnessUtxo = input.witnessUtxo {
             return (witnessUtxo.lockingScript, witnessUtxo.value)
         } else if let nonWitnessUtxo = input.nonWitnessUtxo {
@@ -254,7 +258,13 @@ public class Psbt {
         }
     }
 
-    func extractTransaction() -> Transaction {
+    private func checkSighashTypeAllowed(sigHashType: BTCSighashType, sigHashTypes: [BTCSighashType]?) throws {
+        if let sigHashTypes, !sigHashTypes.map(\.rawValue).contains(sigHashType.rawValue) {
+            throw PsbtError.sigHashTypeMissMatch
+        }
+    }
+
+    public func extractTransaction() -> Transaction {
         let tx = self.tx
         inputs.enumerated().forEach { offset, element in
             if let finalScriptSig = element.finalScriptSig {
