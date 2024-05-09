@@ -46,6 +46,17 @@ public class PsbtInputUpdate {
         self.unknownKeyVals = unknownKeyVals
     }
 
+    public func update<T>(key: ReferenceWritableKeyPath<PsbtInputUpdate, T?>, value: T) {
+        self[keyPath: key] = value
+    }
+
+    public func update<T>(key: ReferenceWritableKeyPath<PsbtInputUpdate, [T]?>, value: T) {
+        if self[keyPath: key] == nil {
+            self[keyPath: key] = []
+        }
+        self[keyPath: key]?.append(value)
+    }
+
     public func clearFinalizedInput() {
         partialSig = nil
         sighashType = nil

@@ -63,7 +63,7 @@ public class Psbt {
         let (hash, sigHashType) = try getHashForSig(index: index, sigHashTypes: sigHashTypes)
         let signature: Data = try Crypto.sign(hash, privateKey: pk)
         let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [sigHashType.rawValue])
-        inputs[index].partialSig = [partialSig]
+        inputs[index].update(key: \.partialSig, value: partialSig)
     }
 
     private func _signTaprootInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]?) throws {

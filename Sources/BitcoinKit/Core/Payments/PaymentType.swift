@@ -6,18 +6,8 @@ public protocol PaymentType {
 }
 
 public protocol WitnessPaymentType: PaymentType {
-    static func inputFromSignature(_ sig: [PartialSig]) -> Data
-    static func witnessFromSignature(_ sig: [PartialSig]) -> [Data]
-}
-
-extension WitnessPaymentType {
-    func inputFromSignature(_ sig: [PartialSig]) -> Data {
-        Self.inputFromSignature(sig)
-    }
-
-    func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
-        Self.witnessFromSignature(sig)
-    }
+    func inputFromSignature(_ sig: [PartialSig]) -> Data
+    func witnessFromSignature(_ sig: [PartialSig]) -> [Data]
 }
 
 public enum PaymentError: Error {

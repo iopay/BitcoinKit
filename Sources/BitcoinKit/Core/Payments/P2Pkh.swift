@@ -70,11 +70,11 @@ public struct P2pkh: WitnessPaymentType, Address {
             .data
     }
 
-    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+    public func inputFromSignature(_ sig: [PartialSig]) -> Data {
         try! Script().appendData(sig[0].signature).appendData(sig[0].pubkey).data
     }
 
-    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+    public func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
         []
     }
 }

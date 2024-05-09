@@ -53,11 +53,11 @@ public struct P2wpkh: WitnessPaymentType, Address {
         self.output = try! Script().append(.OP_0).appendData(hash).data
     }
 
-    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+    public func inputFromSignature(_ sig: [PartialSig]) -> Data {
         .init()
     }
 
-    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+    public func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
         [sig[0].signature, sig[0].pubkey]
     }
 

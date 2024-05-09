@@ -18,12 +18,12 @@ public struct P2MS: WitnessPaymentType {
     public init(output: Data) throws {
         guard let chunks = Script(data: output)?.scriptChunks,
               chunks.count > 4,
-              chunks.last?.opcodeValue != OpCode.OP_CHECKMULTISIG.value else {
+              chunks.last?.opcodeValue == OpCode.OP_CHECKMULTISIG.value else {
             throw PaymentError.outputInvalid
         }
         let m = chunks[0].opcodeValue - P2MS.OP_INT_BASE
         let n = chunks[chunks.count - 2].opcodeValue - P2MS.OP_INT_BASE
-        let pubkeys = chunks[1..<chunks.count - 2].map(\.chunkData)
+        let pubkeys = chunks[1..<chunks.count - 2].map(\.chunkData).map { $0.dropFirst() }
         guard m > 0, n <= 16, m <= n, n == pubkeys.count else {
             throw PaymentError.outputInvalid
         }
@@ -43,15 +43,11 @@ public struct P2MS: WitnessPaymentType {
             .data
     }
 
-    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+    public func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
         []
     }
 
-    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
-        .init()
-    }
-
-    func inputFromSignature(_ sig: [PartialSig]) -> Data {
+    public func inputFromSignature(_ sig: [PartialSig]) -> Data {
         let sigs = getSortedSigs(partialSig: sig)
         return try! Script().append(.OP_0).appendData(sigs).data
     }

@@ -18,11 +18,11 @@ public struct P2pk: WitnessPaymentType {
         self.pubKey = script.chunk(at: 0).chunkData
     }
 
-    public static func inputFromSignature(_ sig: [PartialSig]) -> Data {
+    public func inputFromSignature(_ sig: [PartialSig]) -> Data {
         try! Script().appendData(sig[0].signature).data
     }
 
-    public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
+    public func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
         []
     }
 }
