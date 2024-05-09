@@ -75,10 +75,11 @@ public struct Crypto {
         let helper: SignatureHashHelper
         if let hashType = BCHSighashType(rawValue: sigData.last!) {
             helper = BCHSignatureHashHelper(hashType: hashType)
-        } else if let hashType = BTCSighashType(rawValue: sigData.last!) {
-            helper = BTCSignatureHashHelper(hashType: hashType)
+//        } else if let hashType = BTCSighashType(rawValue: sigData.last!) {
+//            helper = BTCSignatureHashHelper(hashType: hashType)
         } else {
-            throw ScriptMachineError.error("Unknown sig hash type")
+//            throw ScriptMachineError.error("Unknown sig hash type")
+            helper = BTCSignatureHashHelper(hashType: BTCSighashType(rawValue: sigData.last!))
         }
         // Strip that last byte to have a pure signature.
         let sighash: Data = helper.createSignatureHash(of: tx, for: utxo, inputIndex: inputIndex)

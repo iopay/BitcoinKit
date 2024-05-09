@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// The `Psbt` class represents a Partially Signed Bitcoin Transaction (PSBT).
 public class Psbt {
     public internal(set) var tx: Transaction
     public internal(set) var globalXpub: [GlobalXPub]?
@@ -21,6 +22,12 @@ public class Psbt {
         self.outputs = []
     }
 
+    /// Adds an input to the Partially Signed Bitcoin Transaction (PSBT).
+    ///
+    /// - Parameters:
+    ///   - prevOutput: The previous output of the transaction being spent.
+    ///   - sequence: The sequence number for the input. Defaults to UInt32.max.
+    ///   - update: An optional `PsbtInputUpdate` object containing additional information about the input.
     public func addInput(prevOutput: TransactionOutPoint, sequence: UInt32 = UInt32.max, update: PsbtInputUpdate = PsbtInputUpdate()) {
         tx.addInput(.init(previousOutput: prevOutput, sequence: sequence))
         inputs.append(update)
@@ -44,14 +51,17 @@ public class Psbt {
         if inputs[index].isTaprootInput {
             try _signTaprootInput(with: pk, at: index, sigHashTypes: sigHashTypes)
         } else {
-            try _signInput(with: pk, at: index, sigHashTypes: sigHashTypes)
+            if let sigHashTypes {
+                try _signInput(with: pk, at: index, sigHashTypes: sigHashTypes)
+            } else {
+                try _signInput(with: pk, at: index)
+            }
         }
     }
 
-    private func _signInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]?) throws {
+    private func _signInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType] = [.ALL]) throws {
         let (hash, sigHashType) = try getHashForSig(index: index, sigHashTypes: sigHashTypes)
         let signature: Data = try Crypto.sign(hash, privateKey: pk)
-        /// TODO: sighashtype
         let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [sigHashType.rawValue])
         inputs[index].partialSig = [partialSig]
     }
@@ -89,12 +99,12 @@ public class Psbt {
         if inputs[index].isTaprootInput {
             try _finalizeTaprootInput(index: index)
         } else {
-            _finalizeInput(index: index)
+            try _finalizeInput(index: index)
         }
     }
 
-    private func _finalizeInput(index: Int) {
-        let (finalScriptSig, finalScriptWitness) = prepareFinalScripts(input: inputs[index], index: index)
+    private func _finalizeInput(index: Int) throws {
+        let (finalScriptSig, finalScriptWitness) = try prepareFinalScripts(input: inputs[index], index: index)
         if let finalScriptSig {
             inputs[index].finalScriptSig = finalScriptSig
         }
@@ -104,21 +114,22 @@ public class Psbt {
         inputs[index].clearFinalizedInput()
     }
 
-    private func _finalizeTaprootInput(index: Int) throws {
+    private func _finalizeTaprootInput(index: Int, tapLeafHashToFinalize: Data? = nil) throws {
         if inputs[index].witnessUtxo == nil {
-            throw "Cannot finalize input \(index). Missing withness utxo."
+            throw PsbtError.utxoInputItemRequired
         }
         if let tapKeySig = inputs[index].tapKeySig {
             let finalScriptWitness = witnessStackToScriptWitness(witness: P2tr.witnessFromSignature(tapKeySig))
             inputs[index].finalScriptWitness = finalScriptWitness
         } else {
-
+            let finalScriptWitness = try inputs[index].finalizeTapScript(with: tapLeafHashToFinalize)
+            inputs[index].finalScriptWitness = finalScriptWitness
         }
 
         inputs[index].clearFinalizedInput()
     }
 
-    private func getHashForSig(index: Int, sigHashTypes: [BTCSighashType]?) throws -> (hash: Data, sighashType: BTCSighashType) {
+    private func getHashForSig(index: Int, sigHashTypes: [BTCSighashType]) throws -> (hash: Data, sighashType: BTCSighashType) {
         let input = inputs[index]
         let sigHashType = (input.sighashType != nil) ? BTCSighashType(rawValue: input.sighashType!) : BTCSighashType.ALL
         try checkSighashTypeAllowed(sigHashType: sigHashType, sigHashTypes: sigHashTypes)
@@ -167,7 +178,7 @@ public class Psbt {
         return (hash, sigHashType)
     }
 
-    private func prepareFinalScripts(input: PsbtInputUpdate, index: Int) -> (Data?, Data?) {
+    private func prepareFinalScripts(input: PsbtInputUpdate, index: Int) throws -> (Data?, Data?) {
         let isP2SH = input.redeemScript != nil
         let isP2WSH = input.witnessScript != nil
         let script: Data
@@ -188,7 +199,7 @@ public class Psbt {
         let sig = input.partialSig!
         let isSegwit = isP2WSH || isP2WPKH(script)
 
-        let payment = getPayment(script: script)
+        let payment = try getPayment(script: script, partialSig: input.partialSig ?? [])
         let payment_input = payment.inputFromSignature(sig)
         let payment_witness = payment.witnessFromSignature(sig)
 
@@ -222,7 +233,7 @@ public class Psbt {
 
     private func getTaprootHashesForSig(inputIndex: Int, publicKey: Data, tapLeafHashToSign: Data? = nil, sigHashTypes: [BTCSighashType]? = nil) throws -> [(hash: Data, leafHash: Data?)] {
         let input = inputs[inputIndex]
-        let sigHashType = (input.sighashType != nil) ? BTCSighashType(rawValue: input.sighashType!) : BTCSighashType.ALL
+        let sigHashType = (input.sighashType != nil) ? BTCSighashType(rawValue: input.sighashType!) : BTCSighashType.DEFAULT
         try checkSighashTypeAllowed(sigHashType: sigHashType, sigHashTypes: sigHashTypes)
 
         let prevOuts = try inputs.map { try getScriptAndAmountFromUtxo(input: $0, index: inputIndex) }
@@ -235,13 +246,22 @@ public class Psbt {
             let script = signingScripts[inputIndex]
             let outputKey = isP2TR(script) ? script[2..<34] : Data()
             if toXOnly(publicKey) == outputKey {
-                let tapKeyHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: .BTC.ALL)
+                let tapKeyHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: sigHashType)
                 hashes.append((tapKeyHash, nil))
             }
         }
 
-        //        let tapLeafHashes = inputs[inputIndex].
-        /// TODO:
+        let tapLeafHashes = input.tapLeafScript?
+            .filter { pubkeyInScript(pubkey: publicKey, script: $0.script) }
+            .map(\.leafHash)
+            .filter { tapLeafHashToSign == nil || tapLeafHashToSign == $0 }
+            .map { leafHash in
+                let tapScriptHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: BTCSighashType.ALL, leafHash: leafHash)
+                return (tapScriptHash, leafHash)
+            }
+        if let tapLeafHashes {
+            hashes.append(contentsOf: tapLeafHashes)
+        }
 
         return hashes
     }
@@ -264,6 +284,9 @@ public class Psbt {
         }
     }
 
+    /// Extracts the transaction from the Partially Signed Bitcoin Transaction (PSBT).
+    /// This method replaces the signature script and witness data of each input with the final script signature and witness.
+    /// - Returns: The extracted transaction.
     public func extractTransaction() -> Transaction {
         let tx = self.tx
         inputs.enumerated().forEach { offset, element in
@@ -278,26 +301,33 @@ public class Psbt {
     }
 }
 
-func getPayment(script: Data) -> WitnessPaymentType {
+func getPayment(script: Data, partialSig: [PartialSig]) throws -> WitnessPaymentType {
     if isP2MS(script) {
-        /// TODO: p2ms
-        fatalError()
+        return try P2MS(output: script)
     } else if isP2PK(script) {
-        try! P2pk(output: script)
+        return try P2pk(output: script)
     } else if isP2PKH(script) {
-        try! P2pkh(output: script)
+        return try P2pkh(output: script)
     } else if isP2WPKH(script) {
-        try! P2wpkh(output: script)
+        return try P2wpkh(output: script)
     } else {
-        fatalError()
+        throw PsbtError.cannotFinalize
     }
 }
 
-/// TODO: p2ms
-func getSortedSigs(script: Data, partialSig: [PartialSig]) -> [Data] {
-    return []
+func pubkeyInScript(pubkey: Data, script: Data) -> Bool {
+    pubkeyPositionInScript(pubkey: pubkey, script: script) >= 0
 }
 
+func pubkeyPositionInScript(pubkey: Data, script: Data) -> Int {
+    let pubkeyHash = _Hash.ripemd160(pubkey)
+    let pubkeyXonly = pubkey.xOnly
+    let chunks = Script(data: script)?.scriptChunks
+    let index = chunks?.firstIndex(where: { chunk in
+        chunk.chunkData == pubkey || chunk.chunkData == pubkeyHash || chunk.chunkData == pubkeyXonly
+    })
+    return index ?? -1
+}
 
 /// p2pkh input <==> [signature, pubkey] ,  witness: input ==> [empty]
 ///

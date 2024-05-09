@@ -24,6 +24,7 @@
 
 import Foundation
 
+private let SIGHASH_DEFAULT: UInt8 = 0x00
 private let SIGHASH_ALL: UInt8 = 0x01 // 00000001
 private let SIGHASH_NONE: UInt8 = 0x02 // 00000010
 private let SIGHASH_SINGLE: UInt8 = 0x03 // 00000011
@@ -31,7 +32,7 @@ private let SIGHASH_FORK_ID: UInt8 = 0x40 // 01000000
 private let SIGHASH_ANYONECANPAY: UInt8 = 0x80 // 10000000
 
 private let SIGHASH_OUTPUT_MASK: UInt8 = 0x1f // 00011111
-private let SIGHASH_INPUT_MASK: UInt8 = 0x80
+private let SIGHASH_INPUT_MASK: UInt8 = 0x80  // 10000000
 
 public protocol SighashType {
     var rawValue: UInt8 { get }
@@ -117,9 +118,10 @@ public enum BCHSighashType: SighashType {
 
 // MARK: BTC SighashType
 public enum BTCSighashType: SighashType {
-    case ALL, NONE, SINGLE, ALL_ANYONECANPAY, NONE_ANYONECANPAY, SINGLE_ANYONECANPAY, UNEXPECTED(UInt8)
+    case DEFAULT, ALL, NONE, SINGLE, ALL_ANYONECANPAY, NONE_ANYONECANPAY, SINGLE_ANYONECANPAY, UNEXPECTED(UInt8)
     public init(rawValue: UInt8) {
         switch rawValue {
+        case SIGHASH_DEFAULT: self = .DEFAULT
         case BTCSighashType.ALL.rawValue: self = .ALL
         case BTCSighashType.NONE.rawValue: self = .NONE
         case BTCSighashType.SINGLE.rawValue: self = .SINGLE
@@ -132,6 +134,7 @@ public enum BTCSighashType: SighashType {
 
     public var rawValue: UInt8 {
         switch self {
+        case .DEFAULT: return SIGHASH_DEFAULT
         case .ALL: return SIGHASH_ALL // 00000001
         case .NONE: return SIGHASH_NONE // 00000010
         case .SINGLE: return SIGHASH_FORK_ID + SIGHASH_SINGLE // 00000011

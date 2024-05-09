@@ -16,7 +16,7 @@ extension Psbt {
         let byteStream = ByteStream(buffer)
 
         guard byteStream.read(UInt32.self, bigEndian: true) == 0x70736274, byteStream.read(UInt8.self) == 0xff else {
-            throw PsbtError.invalidMagicNumber
+            throw PsbtSerializeError.invalidMagicNumber
         }
 
         var globalKeyIndex = [String: Bool]()
@@ -27,7 +27,7 @@ extension Psbt {
             let key = try byteStream.read(Data.self)
             let value = try byteStream.read(Data.self)
             if globalKeyIndex[key.hex] == true {
-                throw PsbtError.keyMustUnique(key.hex)
+                throw PsbtSerializeError.keyMustUnique(key.hex)
             }
             globalKeyIndex[key.hex] = true
             globalMapKeyVals.append(PsbtKeyValue(key, value))
@@ -35,7 +35,7 @@ extension Psbt {
 
         let unsignedTxMaps = globalMapKeyVals.filter { $0.key.bytes[0] == PsbtGlobalTypes.UNSIGNED_TX.rawValue }
         guard unsignedTxMaps.count == 1 else {
-            throw PsbtError.multiUnsignedTx
+            throw PsbtSerializeError.multiUnsignedTx
         }
 
         let unsigned = Transaction.deserialize(unsignedTxMaps[0].value)
@@ -54,7 +54,7 @@ extension Psbt {
                 let value = try byteStream.read(Data.self)
 
                 if inputKeyIndex[key.hex] == true {
-                    throw PsbtError.keyMustUnique(key.hex)
+                    throw PsbtSerializeError.keyMustUnique(key.hex)
                 }
                 inputKeyIndex[key.hex] = true
                 input.append(PsbtKeyValue(key, value))
@@ -72,7 +72,7 @@ extension Psbt {
                 let value = try byteStream.read(Data.self)
 
                 if outputKeyIndex[key.hex] == true {
-                    throw PsbtError.keyMustUnique(key.hex)
+                    throw PsbtSerializeError.keyMustUnique(key.hex)
                 }
                 outputKeyIndex[key.hex] = true
                 output.append(PsbtKeyValue(key, value))
@@ -85,7 +85,7 @@ extension Psbt {
             switch keyVals.key[0] {
             case PsbtGlobalTypes.UNSIGNED_TX.rawValue:
                 guard !txExist else {
-                    throw PsbtError.multiUnsignedTx
+                    throw PsbtSerializeError.multiUnsignedTx
                 }
                 txExist = true
             case PsbtGlobalTypes.GLOBAL_XPUB.rawValue:

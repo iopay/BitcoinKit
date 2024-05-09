@@ -207,7 +207,7 @@ extension Transaction {
         return Crypto.sha256sha256(data)
     }
 
-    func hashForWitnessV1(index: Int, prevOutScripts: [Data], values: [UInt64], hashType: SighashType, leafHash: Data? = nil, annex: Data? = nil) -> Data {
+    func hashForWitnessV1(index: Int, prevOutScripts: [Data], values: [UInt64], hashType: BTCSighashType, leafHash: Data? = nil, annex: Data? = nil) -> Data {
         precondition(prevOutScripts.count == inputs.count)
         precondition(values.count == inputs.count)
 
@@ -216,6 +216,9 @@ extension Transaction {
         var hashScriptPubKeys = Data()
         var hashSequences = Data()
         var hashOutputs = Data()
+
+//        let outputType: BTCSighashType = hashType == .DEFAULT ? .ALL : hashType.rawValue & 
+        let outputType = hashType.rawValue == 0 ? BTCSighashType.ALL : hashType
 
         if !hashType.inputIsAnyoneCanPay {
             //            var data = Data(capacity: 36 * inputs.count)
@@ -240,9 +243,9 @@ extension Transaction {
             hashSequences = data.sha256()
         }
 
-        if !(hashType.isNone || hashType.isSingle) {
+        if !(outputType.isNone || outputType.isSingle) {
             hashOutputs = Data(outputs.flatMap({ $0.serialized() })).sha256()
-        } else if hashType.isSingle && index < outputs.count {
+        } else if outputType.isSingle && index < outputs.count {
             let out = outputs[index]
             hashOutputs = out.serialized().sha256()
         }
@@ -262,7 +265,7 @@ extension Transaction {
         data += hashAmounts
         data += hashScriptPubKeys
         data += hashSequences
-        if !(hashType.isNone || hashType.isSingle) {
+        if !(outputType.isNone || outputType.isSingle) {
             data += hashOutputs
         }
         data += spendType
@@ -282,7 +285,7 @@ extension Transaction {
             data += (VarInt(annex.count).serialized() + annex).sha256()
         }
 
-        if hashType.isSingle {
+        if outputType.isSingle {
             data += hashOutputs
         }
 

@@ -9,10 +9,12 @@ public struct P2wpkh: WitnessPaymentType, Address {
     public let type: AddressType = .P2WPKH
 
     public init(output: Data) throws {
-        self.init(output: output, network: .mainnetBTC)
+        try Self.validate(output: output)
+        try self.init(output: output, network: .mainnetBTC)
     }
 
-    public init(output: Data, network: Network = .mainnetBTC) {
+    public init(output: Data, network: Network = .mainnetBTC) throws {
+        try Self.validate(output: output)
         self.init(hash: output[2...], network: network)
     }
 
@@ -57,5 +59,11 @@ public struct P2wpkh: WitnessPaymentType, Address {
 
     public static func witnessFromSignature(_ sig: [PartialSig]) -> [Data] {
         [sig[0].signature, sig[0].pubkey]
+    }
+
+    public static func validate(output: Data) throws {
+        guard output.count == 22, output[0] == OpCode.OP_0.value, output[1] == 0x14 else {
+            throw PaymentError.outputInvalid
+        }
     }
 }

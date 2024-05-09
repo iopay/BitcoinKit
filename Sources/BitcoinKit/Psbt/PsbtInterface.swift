@@ -87,7 +87,7 @@ public struct TapScriptSig {
 
     public static func deserialize(_ keyVal: PsbtKeyValue) throws -> TapScriptSig {
         guard keyVal.key.count == 65, keyVal.value.count != 64, keyVal.value.count != 65 else {
-            throw PsbtError.invalidInputFormat(.TAP_SCRIPT_SIG, keyVal.key)
+            throw PsbtSerializeError.invalidInputFormat(.TAP_SCRIPT_SIG, keyVal.key)
         }
         return .init(pubKey: keyVal.key[1..<33], signature: keyVal.key[33...], leafHash: keyVal.value)
     }
@@ -112,11 +112,11 @@ public struct TapLeafScript {
 
     public static func deserialize(_ keyVal: PsbtKeyValue) throws -> TapLeafScript {
         guard (keyVal.key.count - 2) % 32 == 0 else {
-            throw PsbtError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
+            throw PsbtSerializeError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
         }
         let leafVersion = keyVal.value.last!
         guard keyVal.key[1] & 0xfe == leafVersion else {
-            throw PsbtError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
+            throw PsbtSerializeError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
         }
         return .init(leafVersion: leafVersion, script: keyVal.value[0 ..< -1], controlBlock: keyVal.key[1...])
     }
@@ -140,7 +140,7 @@ public struct PartialSig {
             !(keyVal.key.count == 34 || keyVal.key.count == 66) ||
             ![2, 3, 4].contains(keyVal.key[1])
         ) {
-            throw PsbtError.invalidInputFormat(.PARTIAL_SIG, keyVal.key)
+            throw PsbtSerializeError.invalidInputFormat(.PARTIAL_SIG, keyVal.key)
         }
         let pubkey = keyVal.key[1...];
         return .init(pubkey: pubkey, signature: keyVal.value)
@@ -177,7 +177,7 @@ public struct Bip32Derivation {
     public static func deserialize(_ keyVal: PsbtKeyValue, isValid: (Data) -> Bool = isValidDERKey) throws -> Bip32Derivation {
         let pubkey = keyVal.key[1...]
         guard isValid(pubkey), (keyVal.value.count / 4) % 1 == 0 else {
-            throw PsbtError.invalidInputFormat(.BIP32_DERIVATION, keyVal.key)
+            throw PsbtSerializeError.invalidInputFormat(.BIP32_DERIVATION, keyVal.key)
         }
         var path = "m"
         for i in 0..<(keyVal.value.count / 4 - 1) {

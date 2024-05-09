@@ -7,11 +7,7 @@
 
 import Foundation
 
-public enum PsbtError: Error {
-    case indexOutOfBounds
-    case utxoInputItemRequired
-    case p2shMissingRedeemScript
-    case p2wshMissingWitnessScript
+public enum PsbtSerializeError: Error {
     case unexpectedEnd
     case invalidMagicNumber
     case keyMustUnique(String)
@@ -20,5 +16,13 @@ public enum PsbtError: Error {
     case invalidInputFormat(PsbtInputTypes, Data)
     case multipleOutputKey(PsbtOutputTypes)
     case invalidOutputFormat(PsbtOutputTypes, Data)
+}
+
+public enum PsbtError: Error {
+    case indexOutOfBounds
     case sigHashTypeMissMatch
+    case utxoInputItemRequired
+    case p2shMissingRedeemScript
+    case p2wshMissingWitnessScript
+    case cannotFinalize
 }

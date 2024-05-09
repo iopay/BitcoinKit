@@ -361,6 +361,13 @@ public class Script {
     }
 
     @discardableResult
+    public func appendData(_ newData: [Data]) throws -> Script {
+        try newData.reduce(self) { partialResult, e in
+            try self.appendData(e)
+        }
+    }
+
+    @discardableResult
     public func appendData(_ newData: Data) throws -> Script {
         guard !newData.isEmpty else {
             throw ScriptError.error("Data is empty.")

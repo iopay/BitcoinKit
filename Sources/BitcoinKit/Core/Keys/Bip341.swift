@@ -19,6 +19,13 @@ public enum TaggedHashPrefix {
     case KeyAgg_coefficient
 }
 
+public let LEAF_VERSION_TAPSCRIPT: UInt8 = 0xc0
+public let MAX_TAPTREE_DEPTH: UInt8 = 128
+
+//public struct TapLeaf {
+//    
+//}
+
 public let TAGGED_HASH_PREFIXES: [TaggedHashPrefix: Data] = [
     .BIP0340_challenge : Data([
         123, 181, 45, 122, 159, 239, 88, 50, 62, 177, 191, 122, 64, 125, 179, 130,
@@ -78,6 +85,11 @@ public let TAGGED_HASH_PREFIXES: [TaggedHashPrefix: Data] = [
 
 public func taggedHash(_ prefix: TaggedHashPrefix, data: Data) -> Data {
     (TAGGED_HASH_PREFIXES[prefix]! + data).sha256()
+}
+
+public func tapLeafHash(output: Data, version: UInt8?) -> Data {
+    let version = version ?? LEAF_VERSION_TAPSCRIPT
+    return taggedHash(.TapLeaf, data: [version] + VarInt(output.count).serialized() + output)
 }
 
 public func tapTweakHash(pubKey: Data, h: Data?) -> Data {

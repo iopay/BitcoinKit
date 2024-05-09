@@ -56,13 +56,13 @@ public class PsbtOutputUpdate {
             case .REDEEM_SCRIPT:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtOutputTypes.REDEEM_SCRIPT)
                 guard update.redeemScript == nil else {
-                    throw PsbtError.multipleOutputKey(.REDEEM_SCRIPT)
+                    throw PsbtSerializeError.multipleOutputKey(.REDEEM_SCRIPT)
                 }
                 update.redeemScript = keyVal.value
             case .WITNESS_SCRIPT:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtOutputTypes.WITNESS_SCRIPT)
                 guard update.witnessScript == nil else {
-                    throw PsbtError.multipleOutputKey(.WITNESS_SCRIPT)
+                    throw PsbtSerializeError.multipleOutputKey(.WITNESS_SCRIPT)
                 }
                 update.witnessScript = keyVal.value
             case .BIP32_DERIVATION:
@@ -73,7 +73,7 @@ public class PsbtOutputUpdate {
             case .TAP_INTERNAL_KEY:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtOutputTypes.TAP_INTERNAL_KEY)
                 guard keyVal.key.count == 1, keyVal.value.count == 32 else {
-                    throw PsbtError.invalidInputFormat(.TAP_INTERNAL_KEY, keyVal.value)
+                    throw PsbtSerializeError.invalidInputFormat(.TAP_INTERNAL_KEY, keyVal.value)
                 }
                 update.tapInternalKey = keyVal.value
             case .TAP_TREE:

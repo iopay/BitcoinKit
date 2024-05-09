@@ -135,18 +135,6 @@ public struct PrivateKey {
     public func sign(_ data: Data) -> Data {
         return try! Crypto.sign(data, privateKey: self)
     }
-
-    @available(*, unavailable, message: "Use SignatureHashHelper and sign(_ data: Data) method instead")
-    public func sign(_ tx: Transaction, utxoToSign: UnspentTransaction, hashType: SighashType, inputIndex: Int = 0) -> Data {
-        let helper: SignatureHashHelper
-        if hashType.hasForkId {
-            helper = BCHSignatureHashHelper(hashType: BCHSighashType(rawValue: hashType.uint8)!)
-        } else {
-            helper = BTCSignatureHashHelper(hashType: BTCSighashType(rawValue: hashType.uint8)!)
-        }
-        let sighash = helper.createSignatureHash(of: tx, for: utxoToSign.output, inputIndex: inputIndex)
-        return try! Crypto.sign(sighash, privateKey: self)
-    }
 }
 
 extension PrivateKey: Equatable {

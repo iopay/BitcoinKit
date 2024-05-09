@@ -121,13 +121,13 @@ public class PsbtInputUpdate {
             case .NON_WITNESS_UTXO:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: .NON_WITNESS_UTXO)
                 guard update.nonWitnessUtxo == nil else {
-                    throw PsbtError.multipleInputKey(.NON_WITNESS_UTXO)
+                    throw PsbtSerializeError.multipleInputKey(.NON_WITNESS_UTXO)
                 }
                 update.nonWitnessUtxo = keyVal.value
             case .WITNESS_UTXO:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: .WITNESS_UTXO)
                 guard update.witnessUtxo == nil else {
-                    throw PsbtError.multipleInputKey(.WITNESS_UTXO)
+                    throw PsbtSerializeError.multipleInputKey(.WITNESS_UTXO)
                 }
                 update.witnessUtxo = WitnessUtxo.deserialize(.init(keyVal.value))
             case .PARTIAL_SIG:
@@ -138,19 +138,19 @@ public class PsbtInputUpdate {
             case .SIGHASH_TYPE:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: .SIGHASH_TYPE)
                 guard update.sighashType == nil else {
-                    throw PsbtError.multipleInputKey(.SIGHASH_TYPE)
+                    throw PsbtSerializeError.multipleInputKey(.SIGHASH_TYPE)
                 }
                 update.sighashType = ByteStream(keyVal.value).read(UInt8.self)
             case .REDEEM_SCRIPT:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtInputTypes.REDEEM_SCRIPT)
                 guard update.redeemScript == nil else {
-                    throw PsbtError.multipleInputKey(.REDEEM_SCRIPT)
+                    throw PsbtSerializeError.multipleInputKey(.REDEEM_SCRIPT)
                 }
                 update.redeemScript = keyVal.value
             case .WITNESS_SCRIPT:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtInputTypes.WITNESS_SCRIPT)
                 guard update.witnessScript == nil else {
-                    throw PsbtError.multipleInputKey(.WITNESS_SCRIPT)
+                    throw PsbtSerializeError.multipleInputKey(.WITNESS_SCRIPT)
                 }
                 update.witnessScript = keyVal.value
             case .BIP32_DERIVATION:
@@ -170,7 +170,7 @@ public class PsbtInputUpdate {
             case .TAP_KEY_SIG:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: .TAP_KEY_SIG)
                 guard keyVal.value.count == 64 || keyVal.value.count == 65 else {
-                    throw PsbtError.invalidInputFormat(.TAP_KEY_SIG, keyVal.value)
+                    throw PsbtSerializeError.invalidInputFormat(.TAP_KEY_SIG, keyVal.value)
                 }
                 update.tapKeySig = keyVal.value
             case .TAP_SCRIPT_SIG:
@@ -191,13 +191,13 @@ public class PsbtInputUpdate {
             case .TAP_INTERNAL_KEY:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: PsbtInputTypes.TAP_INTERNAL_KEY)
                 guard keyVal.key.count == 1, keyVal.value.count == 32 else {
-                    throw PsbtError.invalidInputFormat(.TAP_INTERNAL_KEY, keyVal.value)
+                    throw PsbtSerializeError.invalidInputFormat(.TAP_INTERNAL_KEY, keyVal.value)
                 }
                 update.tapInternalKey = keyVal.value
             case .TAP_MERKLE_ROOT:
                 try checkKeyBuffer(keyBuf: keyVal.key, key: .TAP_MERKLE_ROOT)
                 guard keyVal.key.count == 1, keyVal.value.count == 32 else {
-                    throw PsbtError.invalidInputFormat(.TAP_MERKLE_ROOT, keyVal.value)
+                    throw PsbtSerializeError.invalidInputFormat(.TAP_MERKLE_ROOT, keyVal.value)
                 }
                 update.tapMerkleRoot = keyVal.value
             default:

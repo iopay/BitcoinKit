@@ -38,7 +38,7 @@ public struct GlobalXPub {
 func decodeGlobalXpub(keyVal: PsbtKeyValue) throws -> GlobalXPub {
     let pubkey = keyVal.key[1...]
     guard keyVal.key.count == 79, [2, 3].contains(keyVal.key[46]), (keyVal.value.count / 4) % 1 == 0 else {
-        throw PsbtError.unexpectedEnd
+        throw PsbtSerializeError.unexpectedEnd
     }
     var path = "m"
     for i in 0..<(keyVal.value.count / 4 - 1) {
