@@ -1,4 +1,4 @@
-// swift-tools-version:5.0
+// swift-tools-version:5.9
 import PackageDescription
 
 let package = Package(
@@ -15,11 +15,14 @@ let package = Package(
     targets: [
         .target(
             name: "BitcoinKit",
-            dependencies: ["secp256k1", "ripemd160", "CryptoSwift"]
+            dependencies: [.product(name: "secp256k1", package: "secp256k1.swift"), "ripemd160", "CryptoSwift"]
         ),
         .testTarget(
             name: "BitcoinKitTests",
-            dependencies: ["BitcoinKit"]
+            dependencies: ["BitcoinKit"],
+            resources: [
+                .copy("Resources/transaction.json")
+            ]
         )
     ],
     swiftLanguageVersions: [.v5]

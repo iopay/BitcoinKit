@@ -130,4 +130,29 @@ class TransactionTests: XCTestCase {
 
         XCTAssertEqual(psbt.extractTransaction().serialized().hex, "02000000000101f0a816905457348a6e90f589059bde4bafdc89f76536586d9dbec457039e8e330300000017160014ec535b08b689033c8afc6a3a7b46489d4f72b55cffffffff01e80300000000000017a91421be9d00c3305b9e5a9eb628953ef7071c003fc6870247304402204df97bec6b47d54f417dd94d952d5ec1f02a488f7a1250088ae1987142c7041902204038b187cdae431b2ef4a14e5851c1a7089d8e60db8fa47c214b07f0482c6fa10121038fc16615f500148a371d4052823311a321567af773c261c34dd410ce5a4e526e00000000")
     }
+
+    func testVirtualSize() throws {
+        guard let url = Bundle.module.url(forResource: "transaction", withExtension: "json") else {
+            XCTFail("Missing File: transaction.json")
+            return
+        }
+
+        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+        let valid = json["valid"] as! [[String: Any]]
+        valid.forEach { item in
+            let whex = item["whex"] as? String
+            let hex = item["hex"] as? String
+            let virtualSize = item["virtualSize"] as? Int
+            let weight = item["weight"] as? Int
+            if (whex != nil || hex != nil) && virtualSize != nil && weight != nil {
+                let tx = if whex != nil && !whex!.isEmpty {
+                    Transaction.deserialize(Data(hex: whex!))
+                } else {
+                    Transaction.deserialize(Data(hex: hex!))
+                }
+                XCTAssertEqual(tx.virtualSize, virtualSize)
+                XCTAssertEqual(tx.weight, weight)
+            }
+        }
+    }
 }
