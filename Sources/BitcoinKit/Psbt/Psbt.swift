@@ -63,7 +63,7 @@ public class Psbt {
         let (hash, sigHashType) = try getHashForSig(index: index, sigHashTypes: sigHashTypes)
         let signature: Data = try Crypto.sign(hash, privateKey: pk)
         let partialSig = PartialSig(pubkey: pk.publicKey().data, signature: signature + [sigHashType.rawValue])
-        inputs[index].update(key: \.partialSig, value: partialSig)
+        inputs[index].update(key: \.partialSig, value: [partialSig])
     }
 
     private func _signTaprootInput(with pk: PrivateKey, at index: Int, sigHashTypes: [BTCSighashType]?) throws {
@@ -79,10 +79,10 @@ public class Psbt {
                 return TapScriptSig(pubKey: toXOnly(pk.publicKey().data), signature: signature, leafHash: leafHash!)
             }
         if let tapKeySig {
-            inputs[index].tapKeySig = tapKeySig
+            inputs[index].update(key: \.tapKeySig, value: tapKeySig)
         }
         if !tapScriptSig.isEmpty {
-            inputs[index].tapScriptSig = tapScriptSig
+            inputs[index].update(key: \.tapScriptSig, value: tapScriptSig)
         }
     }
 
@@ -106,10 +106,10 @@ public class Psbt {
     private func _finalizeInput(index: Int) throws {
         let (finalScriptSig, finalScriptWitness) = try prepareFinalScripts(input: inputs[index], index: index)
         if let finalScriptSig {
-            inputs[index].finalScriptSig = finalScriptSig
+            inputs[index].update(key: \.finalScriptSig, value: finalScriptSig)
         }
         if let finalScriptWitness {
-            inputs[index].finalScriptWitness = finalScriptWitness
+            inputs[index].update(key: \.finalScriptWitness, value: finalScriptWitness)
         }
         inputs[index].clearFinalizedInput()
     }
@@ -120,10 +120,10 @@ public class Psbt {
         }
         if let tapKeySig = inputs[index].tapKeySig {
             let finalScriptWitness = witnessStackToScriptWitness(witness: P2tr.witnessFromSignature(tapKeySig))
-            inputs[index].finalScriptWitness = finalScriptWitness
+            inputs[index].update(key: \.finalScriptWitness, value: finalScriptWitness)
         } else {
             let finalScriptWitness = try inputs[index].finalizeTapScript(with: tapLeafHashToFinalize)
-            inputs[index].finalScriptWitness = finalScriptWitness
+            inputs[index].update(key: \.finalScriptWitness, value: finalScriptWitness)
         }
 
         inputs[index].clearFinalizedInput()
@@ -256,7 +256,7 @@ public class Psbt {
             .map(\.leafHash)
             .filter { tapLeafHashToSign == nil || tapLeafHashToSign == $0 }
             .map { leafHash in
-                let tapScriptHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: BTCSighashType.ALL, leafHash: leafHash)
+                let tapScriptHash = tx.hashForWitnessV1(index: inputIndex, prevOutScripts: signingScripts, values: values, hashType: BTCSighashType.DEFAULT, leafHash: leafHash)
                 return (tapScriptHash, leafHash)
             }
         if let tapLeafHashes {
@@ -323,8 +323,8 @@ func pubkeyPositionInScript(pubkey: Data, script: Data) -> Int {
     let pubkeyHash = _Hash.ripemd160(pubkey)
     let pubkeyXonly = pubkey.xOnly
     let chunks = Script(data: script)?.scriptChunks
-    let index = chunks?.firstIndex(where: { chunk in
-        chunk.chunkData == pubkey || chunk.chunkData == pubkeyHash || chunk.chunkData == pubkeyXonly
+    let index = chunks?.compactMap({ $0 as? DataChunk }).firstIndex(where: { chunk in
+        chunk.pushedData == pubkey || chunk.pushedData == pubkeyHash || chunk.pushedData == pubkeyXonly
     })
     return index ?? -1
 }

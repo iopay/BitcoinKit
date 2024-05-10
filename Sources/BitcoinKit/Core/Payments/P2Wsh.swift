@@ -15,7 +15,7 @@ public struct P2Wsh: PaymentType, Address {
     public private(set) var type: AddressType = .P2WSH(nil)
 
     public init(redeem: PaymentType, network: Network = .mainnetBTC) {
-        let hash = Crypto.sha256ripemd160(redeem.output)
+        let hash = Crypto.sha256(redeem.output)
         self.init(hash: hash, network: network)
         if let address = redeem as? Address {
             self.type = .P2WSH(address.type)
@@ -64,7 +64,7 @@ public struct P2Wsh: PaymentType, Address {
     public static func witnessFrom(redeem: PaymentType, input: Data, witness: [Data]) -> [Data] {
 //        let input = redeem.inputFromSignature(signature)
         if !input.isEmpty && !redeem.output.isEmpty {
-            let chunks = Script(data: input)!.scriptChunks.map(\.scriptData)
+            let chunks = Script(data: input)!.scriptChunks.compactMap({ $0 as? DataChunk }).map(\.pushedData)
             return chunks + [redeem.output]
         }
 //        let witness = redeem.witnessFromSignature(signature)

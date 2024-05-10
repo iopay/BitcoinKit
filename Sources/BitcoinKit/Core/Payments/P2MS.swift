@@ -23,7 +23,7 @@ public struct P2MS: WitnessPaymentType {
         }
         let m = chunks[0].opcodeValue - P2MS.OP_INT_BASE
         let n = chunks[chunks.count - 2].opcodeValue - P2MS.OP_INT_BASE
-        let pubkeys = chunks[1..<chunks.count - 2].map(\.chunkData).map { $0.dropFirst() }
+        let pubkeys = chunks[1..<chunks.count - 2].compactMap({ $0 as? DataChunk }).map(\.pushedData)
         guard m > 0, n <= 16, m <= n, n == pubkeys.count else {
             throw PaymentError.outputInvalid
         }

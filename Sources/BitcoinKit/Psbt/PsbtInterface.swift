@@ -118,7 +118,9 @@ public struct TapLeafScript {
         guard keyVal.key[1] & 0xfe == leafVersion else {
             throw PsbtSerializeError.invalidInputFormat(.TAP_LEAF_SCRIPT, keyVal.key)
         }
-        return .init(leafVersion: leafVersion, script: keyVal.value[0 ..< -1], controlBlock: keyVal.key[1...])
+        let script = keyVal.value[0..<(keyVal.value.count - 1)]
+        let block = keyVal.key[1...]
+        return .init(leafVersion: leafVersion, script: script, controlBlock: block)
     }
 }
 

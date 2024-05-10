@@ -46,15 +46,26 @@ public class PsbtInputUpdate {
         self.unknownKeyVals = unknownKeyVals
     }
 
+    private let arrayOptionKeys = [
+        \PsbtInputUpdate.partialSig,
+        \PsbtInputUpdate.tapScriptSig,
+        \PsbtInputUpdate.bip32Derivation,
+        \PsbtInputUpdate.tapBip32Derivation,
+    ]
+
     public func update<T>(key: ReferenceWritableKeyPath<PsbtInputUpdate, T?>, value: T) {
         self[keyPath: key] = value
     }
 
-    public func update<T>(key: ReferenceWritableKeyPath<PsbtInputUpdate, [T]?>, value: T) {
-        if self[keyPath: key] == nil {
-            self[keyPath: key] = []
+    public func update<T>(key: ReferenceWritableKeyPath<PsbtInputUpdate, [T]?>, value: [T]) {
+        if arrayOptionKeys.contains(key) {
+            if self[keyPath: key] == nil {
+                self[keyPath: key] = []
+            }
+            self[keyPath: key]?.append(contentsOf: value)
+        } else {
+            self[keyPath: key] = value
         }
-        self[keyPath: key]?.append(value)
     }
 
     public func clearFinalizedInput() {
