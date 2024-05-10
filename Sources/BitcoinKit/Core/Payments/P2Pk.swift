@@ -11,11 +11,11 @@ public struct P2pk: WitnessPaymentType {
 
     public init(output: Data) throws {
         self.output = output
-        let script = Script(data: output)!
-        guard script.scriptChunks.count == 2, script.chunk(at: 1).opCode == .OP_CHECKSIG else {
+        let chunks = Script(data: output)?.scriptChunks
+        guard chunks?.count == 2, chunks?[1].opCode == .OP_CHECKSIG, let pk = chunks?[0] as? DataChunk else {
             throw PaymentError.outputInvalid
         }
-        self.pubKey = script.chunk(at: 0).chunkData
+        self.pubKey = pk.pushedData
     }
 
     public func inputFromSignature(_ sig: [PartialSig]) -> Data {

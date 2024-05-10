@@ -32,13 +32,13 @@ public struct P2Wsh: PaymentType, Address {
     }
 
     public init(output: Data) throws {
+        try self.init(output: output, network: .mainnetBTC)
+    }
+
+    public init(output: Data, network: Network = .mainnetBTC) throws {
         guard output.count == 34, output[0] == OpCode.OP_0.value, output[1] == 0x20 else {
             throw PaymentError.outputInvalid
         }
-        self.init(output: output, network: .mainnetBTC)
-    }
-
-    public init(output: Data, network: Network = .mainnetBTC) {
         let hash = output[2...]
         self.init(hash: hash, network: network)
     }

@@ -15,16 +15,17 @@ public struct P2pkh: WitnessPaymentType, Address {
     public init(output: Data, network: Network = .mainnetBTC) throws {
         self.output = output
         self.network = network
-        let script = Script(data: output)!
+        let chunks = Script(data: output)?.scriptChunks
         guard output.count == 25,
-              script.scriptChunks.count == 5,
-              script.chunk(at: 0).opCode == .OP_DUP,
-              script.chunk(at: 1).opCode == .OP_HASH160,
-              script.chunk(at: 3).opCode == .OP_EQUALVERIFY,
-              script.chunk(at: 4).opCode == .OP_CHECKSIG else {
+              chunks?.count == 5,
+              chunks?[0].opCode == .OP_DUP,
+              chunks?[1].opCode == .OP_HASH160,
+              chunks?[3].opCode == .OP_EQUALVERIFY,
+              chunks?[4].opCode == .OP_CHECKSIG, 
+                let hashChunk = chunks?[2] as? DataChunk else {
                 throw PaymentError.outputInvalid
         }
-        self.hash = script.chunk(at: 2).chunkData
+        self.hash = hashChunk.pushedData
         self.address = Base58Check.encode([network.pubkeyhash] + hash)
     }
 
