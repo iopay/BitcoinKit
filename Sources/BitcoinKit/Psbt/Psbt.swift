@@ -266,7 +266,7 @@ public class Psbt {
         return hashes
     }
 
-    private func getScriptAndAmountFromUtxo(input: PsbtInputUpdate, index: Int) throws -> (script: Data, value: UInt64) {
+    public func getScriptAndAmountFromUtxo(input: PsbtInputUpdate, index: Int) throws -> (script: Data, value: UInt64) {
         if let witnessUtxo = input.witnessUtxo {
             return (witnessUtxo.lockingScript, witnessUtxo.value)
         } else if let nonWitnessUtxo = input.nonWitnessUtxo {
