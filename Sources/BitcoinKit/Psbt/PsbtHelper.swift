@@ -57,7 +57,7 @@ extension Array where Element == PsbtKeyValue {
 }
 
 extension PsbtInputUpdate {
-    var isTaprootInput: Bool {
+    public var isTaprootInput: Bool {
         tapInternalKey != nil ||
         tapMerkleRoot != nil ||
         (tapLeafScript?.isEmpty == false) ||

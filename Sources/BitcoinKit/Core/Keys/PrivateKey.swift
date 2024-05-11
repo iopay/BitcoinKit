@@ -158,7 +158,7 @@ public enum PrivateKeyError: Error {
 }
 
 extension PrivateKey {
-    var tweaked: PrivateKey {
+    public var tweaked: PrivateKey {
         let publicKey = computePublicKeyData()
         let tweak = taggedHash(.TapTweak, data: publicKey.xOnly)
         let hasOddY = publicKey[0] == 3 || (publicKey[0] == 4 && publicKey.count >= 64 && publicKey[64] & 1 == 1)
