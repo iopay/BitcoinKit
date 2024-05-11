@@ -43,7 +43,7 @@ class BTCSignatureHashHelperTests: XCTestCase {
         
         let privateKey = try! PrivateKey(wif: "92pMamV6jNyEq9pDpY4f6nBy9KpV2cfJT4L5zDUYiGqyQHJfF1K")
 
-        let toAddress = try! createAddressFromString("mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB")
+        let toAddress = try! createAddress(from: "mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB")
 
         let lockingScript1 = toAddress.script
         let lockingScript2 = privateKey.publicKey().legacy().script

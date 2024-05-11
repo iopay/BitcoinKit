@@ -42,8 +42,8 @@ public struct MockHelper {
     }
 
     public static func createTransaction(unspentTransaction: UnspentTransaction) -> Transaction {
-        let toAddress = try! createAddressFromString("1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")//: BitcoinAddress = try! BitcoinAddress(legacy: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")
-        let changeAddress = try! createAddressFromString("1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")//: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
+        let toAddress = try! createAddress(from: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")//: BitcoinAddress = try! BitcoinAddress(legacy: "1Bp9U1ogV3A14FMvKbRJms7ctyso4Z4Tcx")
+        let changeAddress = try! createAddress(from: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")//: BitcoinAddress = try! BitcoinAddress(legacy: "1FQc5LdgGHMHEN9nwkjmz6tWkxhPpxBvBU")
         // 1. inputs
         let unsignedInputs = [TransactionInput(previousOutput: unspentTransaction.outpoint,
                                                sequence: UInt32.max)]

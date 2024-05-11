@@ -423,8 +423,8 @@ public class SQLiteBlockStore: BlockStore {
                 Payment(state: .received,
                         index: index,
                         amount: value,
-                        from: try! createAddressFromString(String(cString: address)),
-                        to: try! createAddressFromString(String(cString: address)),
+                        from: try! createAddress(from: String(cString: address)),
+                        to: try! createAddress(from: String(cString: address)),
                         txid: Data(bytes: txid!, count: 32)
                 )
             )
@@ -450,8 +450,8 @@ public class SQLiteBlockStore: BlockStore {
                     state: .received,
                     index: index,
                     amount: value,
-                    from: try! createAddressFromString(String(cString: address)),
-                    to: try! createAddressFromString(String(cString: address)),
+                    from: try! createAddress(from: String(cString: address)),
+                    to: try! createAddress(from: String(cString: address)),
                     txid: Data(bytes: txid!, count: 32)
                 )
             )

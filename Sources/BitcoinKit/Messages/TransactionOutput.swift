@@ -56,7 +56,7 @@ public struct TransactionOutput {
 
     public init(value: UInt64, address: String) throws {
         self.value = value
-        self.lockingScript = try createAddressFromString(address).script
+        self.lockingScript = try createAddress(from: address).script
     }
 
     public init() {

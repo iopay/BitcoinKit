@@ -23,7 +23,7 @@ public extension Address where Self: PaymentType {
     }
 }
 
-public func createAddressFromString(_ address: String) throws -> Address {
+public func createAddress(from address: String) throws -> Address {
     if let base58 = Base58Check.decode(address) {
         guard base58.count == 21 else {
             throw PaymentError.addressInvalid
@@ -66,6 +66,26 @@ public func createAddressFromString(_ address: String) throws -> Address {
         }
     }
     throw PaymentError.addressInvalid
+}
+
+public func createAddress(from output: Data, network: Network?) throws -> Address {
+    let network = network ?? .mainnetBTC
+    do {
+        return try P2pkh(output: output, network: network)
+    } catch {}
+    do {
+        return try P2sh(output: output, network: network)
+    } catch {}
+    do {
+        return try P2wpkh(output: output, network: network)
+    } catch {}
+    do {
+        return try P2Wsh(output: output, network: network)
+    } catch {}
+    do {
+        return try P2tr(output: output, network: network)
+    } catch {}
+    throw AddressError.invalid
 }
 
 public func fromBech32(_ address: String) -> (prefix: String, version: UInt8, data: Data)? {

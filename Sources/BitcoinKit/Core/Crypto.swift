@@ -109,7 +109,7 @@ public struct Crypto {
     }
 
     public static func signMessageOfBIP322Simple(_ message: String, address: String, network: Network, privateKey: PrivateKey) throws -> String {
-        let address = try createAddressFromString(address)
+        let address = try createAddress(from: address)
         if ![AddressType.P2WPKH, AddressType.P2TR].contains(address.type) {
             throw CryptoError.notSupportedAddress
         }
