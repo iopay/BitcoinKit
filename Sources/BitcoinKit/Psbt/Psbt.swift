@@ -299,6 +299,20 @@ public class Psbt {
         }
         return tx
     }
+
+    var fee: UInt64 {
+        var inputAmount: UInt64 = 0
+        inputs.enumerated().forEach { idx, update in
+            if let witnessUtxo = update.witnessUtxo {
+                inputAmount += witnessUtxo.value
+            } else if let nonWitnessUtxo = update.nonWitnessUtxo {
+                let _tx = Transaction.deserialize(nonWitnessUtxo)
+                inputAmount += _tx.outputs[Int(self.tx.inputs[idx].previousOutput.index)].value
+            }
+        }
+        let outputAmount = tx.outputs.reduce(0, { $0 + $1.value })
+        return inputAmount - outputAmount
+    }
 }
 
 func getPayment(script: Data, partialSig: [PartialSig]) throws -> WitnessPaymentType {

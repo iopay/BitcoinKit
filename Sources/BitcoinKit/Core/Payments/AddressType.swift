@@ -102,3 +102,19 @@ public func fromBech32(_ address: String) -> (prefix: String, version: UInt8, da
     }
     return nil
 }
+
+extension AddressType {
+    var virtualSize: Double {
+        switch self {
+        case .P2WPKH:
+            68
+        case .P2TR:
+            57.5
+        case .P2PKH:
+            149
+        case .P2SH(_):
+            92
+        default: 0
+        }
+    }
+}
