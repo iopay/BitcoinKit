@@ -13,7 +13,7 @@ public struct UserToSignInput {
     let sighashTypes: [BTCSighashType]?
     let disableTweakSigner: Bool?
 
-    init(index: Int, publicKey: String, sighashTypes: [BTCSighashType]? = nil, disableTweakSigner: Bool? = nil) {
+    public init(index: Int, publicKey: String, sighashTypes: [BTCSighashType]? = nil, disableTweakSigner: Bool? = nil) {
         self.index = index
         self.publicKey = publicKey
         self.sighashTypes = sighashTypes

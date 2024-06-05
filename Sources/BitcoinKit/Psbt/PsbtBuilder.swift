@@ -17,10 +17,6 @@ public protocol UtxoType {
 }
 
 extension UtxoType {
-    var unspent: UnspentTransaction {
-        .init(output: .init(value: amount, lockingScript: script), outpoint: .init(hash: tx, index: index))
-    }
-
     var txInput: (TransactionInput, PsbtInputUpdate) {
         let input = TransactionInput(previousOutput: .init(hash: tx, index: index))
         let update = PsbtInputUpdate(witnessUtxo: TransactionOutput(value: amount, lockingScript: script))
