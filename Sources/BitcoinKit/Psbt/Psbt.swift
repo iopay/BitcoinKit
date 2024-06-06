@@ -300,7 +300,7 @@ public class Psbt {
         return tx
     }
 
-    var fee: UInt64 {
+    public var fee: UInt64 {
         var inputAmount: UInt64 = 0
         inputs.enumerated().forEach { idx, update in
             if let witnessUtxo = update.witnessUtxo {

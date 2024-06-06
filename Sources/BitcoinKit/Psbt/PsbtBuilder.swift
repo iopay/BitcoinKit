@@ -43,7 +43,7 @@ extension PrivateKey {
 }
 
 public class PsbtBuilder {
-    static let UTXO_DUST: UInt64 = 294
+    static let UTXO_DUST: UInt64 = 546
 
     public enum BuilderError: Error {
         case illegalParameter
