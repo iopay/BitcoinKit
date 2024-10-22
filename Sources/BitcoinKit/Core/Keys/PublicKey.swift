@@ -38,7 +38,10 @@ public struct PublicKey {
     public init(bytes data: Data, network: Network) {
         self.data = data
         self.network = network
-        let header = data[0]
+        guard data.count >= 1, let header = data.first else {
+            self.isCompressed = false
+            return
+        }
         self.isCompressed = (header == 0x02 || header == 0x03)
     }
 }
