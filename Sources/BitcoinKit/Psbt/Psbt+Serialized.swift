@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CryptoSwift
 
 extension Psbt {
     public static func deserialize(_ hex: String) throws -> Psbt {
